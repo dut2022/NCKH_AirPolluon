@@ -1,0 +1,2553 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bản đồ Bụi Mịn PM2.5 Tỉnh Đà Nẵng (Lưới 1 km)</title>
+  <meta name="description" content="Hệ thống trực quan hóa chất lượng không khí PM2.5 độ phân giải cao 1 km trên nền bản đồ Google Maps, bao phủ toàn bộ tỉnh Đà Nẵng (hợp nhất).">
+  
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
+  
+  <!-- Leaflet GIS Engine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Typography: Windy Native Sans-Serif + Monospace -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --windy-red: #ed553b;
+      --windy-red-hover: #ff6b52;
+      --windy-bg: #14181f;
+      --glass-panel: rgba(22, 27, 34, 0.88);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --ink: #ffffff;
+      --mute: #9aa7b4;
+      --accent: #f59e0b;
+      --good: #10b981;
+      --bad: #ef4444;
+      --f-ui: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --f-num: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      --shadow-windy: 0 4px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; overflow: hidden; background: var(--windy-bg); color: var(--ink); font-family: var(--f-ui); }
+    [hidden] { display: none !important; }
+
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; background: #0f141c; }
+    #wind { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 400; pointer-events: none; }
+
+    /* WINDY GLASS PANELS */
+    .glass {
+      background: var(--glass-panel);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-windy);
+    }
+
+    /* TOP-LEFT SEARCH BAR & STATION SHORTCUTS (WINDY STYLE) */
+    #topNavLeft {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 12px));
+      left: max(14px, env(safe-area-inset-left, 14px));
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 7px;
+    }
+
+    /* SEARCH INPUT PILL */
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-input {
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 8px 16px 8px 34px;
+      font-family: var(--f-ui);
+      font-size: 13px;
+      color: #fff;
+      width: 200px;
+      transition: all 0.25s ease;
+      box-shadow: var(--shadow-windy);
+    }
+    .search-input:focus {
+      outline: none;
+      width: 240px;
+      background: rgba(26, 32, 42, 0.98);
+      border-color: var(--windy-red);
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--mute);
+      pointer-events: none;
+    }
+    .search-results {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 320px;
+      max-width: 420px;
+      background: rgba(22, 27, 34, 0.98);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      max-height: 320px;
+      overflow-y: auto;
+      box-shadow: var(--shadow-windy);
+      display: none;
+      z-index: 1100;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .search-item {
+      padding: 8px 14px;
+      font-size: 12.5px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .search-item:hover { background: rgba(237, 85, 59, 0.2); }
+    .search-item .coord { font-family: var(--f-num); font-size: 11px; color: var(--mute); margin-left: 6px; }
+
+    /* STATION SHORTCUT BUTTONS (GROUPED WITH SEARCH) */
+    #topStations {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(22, 27, 34, 0.92);
+      padding: 3px 4px;
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-windy);
+    }
+    .station-btn {
+      background: transparent;
+      border: none;
+      color: var(--mute);
+      font-family: var(--f-ui);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .station-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+    .station-btn.active {
+      background: var(--windy-red);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(237, 85, 59, 0.4);
+    }
+    .station-btn .pin { font-size: 13px; }
+    .station-btn .short-label { display: none; }
+    .station-btn .full-label { display: inline; }
+
+    @media (max-width: 1260px) {
+      .station-btn .full-label { display: none; }
+      .station-btn .short-label { display: inline; }
+      .search-input { width: 160px; }
+      .search-input:focus { width: 200px; }
+    }
+    @media (max-width: 960px) {
+      #topStations { display: none; }
+    }
+
+    /* TOP-CENTER BRAND (EXACT WINDY STYLE: NO BACKGROUND, FLOATING DIRECTLY WITH DROP-SHADOW) */
+    #topLogoCenter {
+      position: absolute;
+      top: max(14px, env(safe-area-inset-top, 14px));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      pointer-events: auto;
+    }
+    .windy-logo-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 2px 6px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .windy-logo-center:hover {
+      transform: scale(1.05);
+    }
+    .logo-badge-center {
+      height: 44px;
+      width: auto;
+      max-width: 290px;
+      object-fit: contain;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      display: block;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.85));
+    }
+    .logo-title-center {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.92), 0 1px 3px rgba(0, 0, 0, 0.98);
+    }
+    .logo-title-center b {
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .logo-title-center sub {
+      font-size: 0.68em;
+      font-weight: 700;
+      color: var(--windy-red);
+    }
+    .logo-title-center span {
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      opacity: 0.95;
+    }
+
+    /* TOP-RIGHT ACTIONS & NAV */
+    #topNavRight {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 12px));
+      right: max(14px, env(safe-area-inset-right, 14px));
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-pill {
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 6px 13px;
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      box-shadow: var(--shadow-windy);
+      white-space: nowrap;
+    }
+    .nav-pill:hover { background: rgba(35, 42, 54, 0.95); border-color: var(--windy-red); }
+    .nav-pill.active { background: var(--windy-red); border-color: var(--windy-red); }
+
+    /* LIVE STATUS PILL */
+    #livePill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      box-shadow: var(--shadow-windy);
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--good);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.85); } }
+    .live-val { font-family: var(--f-num); font-weight: 600; color: var(--accent); }
+    .aqi-badge { padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase; }
+
+    /* WINDY RIGHT DOCK GROUP (LAYER DOCK & ZOOM CONTROLS) */
+    #rightDockGroup {
+      position: absolute;
+      top: calc(64px + env(safe-area-inset-top, 0px));
+      right: max(14px, env(safe-area-inset-right, 14px));
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      pointer-events: none;
+    }
+    #layerDock {
+      width: 190px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: auto;
+    }
+    #zoomControls {
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow-windy);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-panel);
+      width: 36px;
+      pointer-events: auto;
+    }
+    .zoom-btn {
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .zoom-btn:hover {
+      background: rgba(35, 42, 54, 0.95);
+      color: var(--windy-red);
+    }
+    .zoom-btn:active {
+      background: rgba(237, 85, 59, 0.25);
+    }
+    .zoom-divider {
+      height: 1px;
+      background: var(--glass-border);
+      width: 100%;
+    }
+    .sel-diem-marker {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65));
+      pointer-events: none;
+    }
+    .dock-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--mute);
+      padding: 4px 6px 2px;
+    }
+    .var-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .layer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+    .layer-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .layer-item.active {
+      background: rgba(237, 85, 59, 0.22);
+      border-color: rgba(237, 85, 59, 0.45);
+      color: #ff8570;
+      font-weight: 600;
+    }
+    .layer-item .icon { font-size: 13.5px; margin-right: 6px; }
+    .var-unit {
+      font-family: var(--f-num);
+      font-size: 10.5px;
+      opacity: 0.7;
+    }
+    .layer-item.active .var-unit {
+      opacity: 0.95;
+      font-weight: 600;
+      color: #fff;
+    }
+    .layer-item-check {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+    .layer-item-check:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+    .layer-item-check .icon { font-size: 13.5px; margin-right: 6px; }
+
+    /* BASEMAP SELECTOR POPUP */
+    .basemap-box {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid var(--glass-border);
+    }
+    .basemap-select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      font-size: 11.5px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    /* OPACITY SLIDER */
+    .slider-row {
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--mute);
+    }
+    .slider-row input[type=range] {
+      width: 100%;
+      accent-color: var(--windy-red);
+      cursor: pointer;
+    }
+
+    /* FLOATING TOAST NOTIFICATION */
+    #toast {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-25px);
+      background: rgba(20, 24, 33, 0.96);
+      border: 1px solid rgba(237, 85, 59, 0.7);
+      color: #fff;
+      padding: 9px 20px;
+      border-radius: 24px;
+      font-size: 12.5px;
+      font-weight: 500;
+      z-index: 9999;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* BOTTOM TIMELINE PLAYER (ICONIC WINDY STYLE) */
+    #timeline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      padding: 8px max(16px, env(safe-area-inset-right, 16px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 16px));
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(to top, rgba(14, 18, 24, 0.98), rgba(14, 18, 24, 0.8) 75%, transparent);
+    }
+    #playBtn {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: var(--windy-red);
+      color: #fff;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 16px rgba(237, 85, 59, 0.5);
+      transition: transform 0.1s, background 0.15s;
+    }
+    #playBtn:hover { background: var(--windy-red-hover); transform: scale(1.05); }
+    #playBtn:active { transform: scale(0.95); }
+    #playBtn svg { width: 18px; height: 18px; }
+
+    #speedBtn {
+      flex: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 9px;
+      font-family: var(--f-num);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .quick-jump-group {
+      display: flex;
+      gap: 4px;
+    }
+    .jump-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      color: var(--mute);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .jump-chip:hover {
+      background: rgba(237, 85, 59, 0.2);
+      color: #fff;
+      border-color: var(--windy-red);
+    }
+
+    #datePickerInput {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      font-family: var(--f-num);
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* TIMELINE SCRUB TRACK */
+    #track {
+      position: relative;
+      flex: 1;
+      height: 44px;
+      cursor: pointer;
+      min-width: 0;
+    }
+    #rail {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 22px;
+      height: 4px;
+      border-radius: 2px;
+      background: #2b3542;
+    }
+    #fill {
+      position: absolute;
+      left: 0;
+      top: 22px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--windy-red);
+    }
+    #thumb {
+      position: absolute;
+      top: 16px;
+      width: 16px;
+      height: 16px;
+      margin-left: -8px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--windy-bg);
+      box-shadow: 0 0 0 1px var(--windy-red);
+    }
+    #bubble {
+      position: absolute;
+      bottom: 30px;
+      transform: translateX(-50%);
+      background: var(--windy-red);
+      color: #fff;
+      font-family: var(--f-num);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    #bubble::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -5px;
+      margin-left: -5px;
+      border: 5px solid transparent;
+      border-bottom: 0;
+      border-top-color: var(--windy-red);
+    }
+    #ticks {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 30px;
+      height: 14px;
+      font-size: 10px;
+      color: var(--mute);
+    }
+    #ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+    #ticks span.y { color: #fff; font-weight: 600; }
+    #ticks i { position: absolute; top: -8px; width: 1px; height: 5px; background: #445466; }
+
+    /* BOTTOM-RIGHT FLOATING LEGEND (SINGLE UNIFIED TURBO COLOR BAR) */
+    #legendBox {
+      position: absolute;
+      right: max(14px, env(safe-area-inset-right, 14px));
+      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      z-index: 990;
+      width: 240px;
+      padding: 7px 12px 6px;
+    }
+    #legendBox .leg-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 5px;
+    }
+    #legbar {
+      height: 9px;
+      border-radius: 5px;
+      margin-bottom: 3px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    #legticks { position: relative; height: 13px; font-family: var(--f-num); font-size: 9.5px; color: var(--mute); }
+    #legticks span { position: absolute; transform: translateX(-50%); }
+
+    /* HOVER TOOLTIP */
+    #tip {
+      position: absolute;
+      pointer-events: none;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      transform: translate(14px, -50%);
+      z-index: 1500;
+    }
+    #tip .tip-title { font-weight: 700; color: #fff; margin-bottom: 2px; }
+    #tip .tip-pm { font-family: var(--f-num); font-size: 13px; font-weight: 700; color: var(--accent); }
+
+    /* BOTTOM FORECAST DRAWER (POINT DETAIL) - WINDY COMPACT STYLE */
+    #sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #f8fafc;
+      color: #111a24;
+      z-index: 1200;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+      transform: translateY(105%);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      max-height: 295px;
+      min-height: 38px;
+      height: 270px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #sheet.open { transform: none; }
+    #sheet.dragging { transition: none !important; user-select: none; }
+    #sheet.collapsed { height: 38px !important; }
+    #sheet.collapsed .body { display: none !important; }
+
+    /* DRAG RESIZE HANDLE BAR */
+    .sheet-resizer {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-top: 1px solid #cbd5e1;
+      border-bottom: 1px solid #dbe2ea;
+      cursor: ns-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      user-select: none;
+      touch-action: none;
+      transition: background 0.15s ease;
+      position: relative;
+    }
+    .sheet-resizer:hover, .sheet-resizer:active, #sheet.dragging .sheet-resizer {
+      background: #cbd5e1;
+    }
+    .sheet-resizer-pill {
+      width: 36px;
+      height: 3px;
+      background: #94a3b8;
+      border-radius: 999px;
+      transition: width 0.2s ease, background 0.2s ease;
+    }
+    .sheet-resizer:hover .sheet-resizer-pill, #sheet.dragging .sheet-resizer-pill {
+      width: 56px;
+      background: var(--windy-red);
+    }
+    .sheet-resizer-hint {
+      position: absolute;
+      right: 12px;
+      font-size: 9.5px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      pointer-events: none;
+    }
+    @media (max-width: 640px) {
+      .sheet-resizer-hint { display: none; }
+    }
+    #sheet .bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-shrink: 0;
+      background: #ffffff;
+      min-height: 28px;
+    }
+    #closeSheet {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bad);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    #sheet .body {
+      display: flex;
+      gap: 10px;
+      padding: 5px 12px 6px;
+      min-height: 0;
+      overflow: hidden;
+      flex: 1;
+    }
+    #sheet .left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    #spark {
+      width: 100%;
+      height: 38px;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      background: #fff;
+      flex-shrink: 0;
+    }
+    .gridwrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 5px; background: #fff; }
+    table.mg { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 10px; width: 100%; }
+    table.mg th {
+      position: sticky;
+      left: 0;
+      background: #fff;
+      z-index: 1;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      padding: 1.5px 6px;
+      white-space: nowrap;
+      border-right: 1px solid #e2e8f0;
+      line-height: 1.2;
+    }
+    table.mg td {
+      min-width: 44px;
+      text-align: center;
+      padding: 1px 2px;
+      font-family: var(--f-num);
+      border-left: 1px solid #f1f5f9;
+      cursor: pointer;
+      line-height: 1.15;
+    }
+    table.mg tr.month td {
+      font-family: var(--f-ui);
+      font-weight: 600;
+      color: #1e293b;
+      text-align: left;
+      padding: 1px 6px;
+      cursor: default;
+      background: #f8fafc;
+      font-size: 9.5px;
+      line-height: 1.2;
+    }
+    table.mg tr.day td { font-family: var(--f-ui); color: #64748b; font-size: 9px; line-height: 1.1; padding: 1px 2px; }
+    table.mg tr.day td b { display: block; color: #0f172a; font-family: var(--f-num); font-weight: 700; font-size: 9.5px; }
+    table.mg td.now { background: #fef3c7; }
+    .chip { display: inline-block; min-width: 28px; padding: 1px 3px; border-radius: 3px; font-weight: 600; font-size: 9.5px; line-height: 1.15; }
+    .arrow { display: inline-block; width: 10px; height: 10px; vertical-align: -1px; }
+    #sheetAbout { flex: none; width: 200px; font-size: 10px; line-height: 1.35; padding: 2px 4px; }
+    #sheetAbout h3 { font-size: 10.5px; margin: 0 0 4px 0; font-weight: 700; color: #0f172a; }
+    #sheetAbout dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0; }
+    #sheetAbout dt { color: #64748b; font-size: 9.5px; }
+    #sheetAbout dd { margin: 0; font-family: var(--f-num); text-align: right; font-weight: 600; font-size: 10px; color: #0f172a; }
+
+    /* MODAL OVERLAYS */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 18, 24, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .modal-card {
+      background: #161b22;
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 960px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      padding: 24px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+    .modal-close:hover { background: rgba(255, 255, 255, 0.15); }
+    .modal-head { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
+    .modal-head h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .modal-head p { font-size: 13px; color: var(--mute); line-height: 1.5; }
+
+    /* KPI CARDS & BARS */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .kpi-box { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px; }
+    .kpi-box .lbl { font-size: 11px; color: var(--mute); text-transform: uppercase; margin-bottom: 4px; }
+    .kpi-box .val { font-size: 22px; font-weight: 800; font-family: var(--f-num); }
+    .bar-row { display: grid; grid-template-columns: 140px 1fr 60px; gap: 10px; align-items: center; margin-bottom: 7px; font-size: 12px; }
+    .bar-track { height: 9px; background: rgba(255, 255, 255, 0.08); border-radius: 5px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 5px; background: var(--windy-red); }
+
+    /* LOADING SCREEN */
+    #loading {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: var(--windy-bg);
+      z-index: 3000;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(237, 85, 59, 0.2);
+      border-top-color: var(--windy-red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 860px) {
+      #topNavLeft .search-input { width: 140px; }
+      #topNavLeft .search-input:focus { width: 180px; }
+      #topNavRight .nav-pill span { display: none; }
+      #layerDock { width: 140px; }
+      #legendBox { display: none; }
+    }
+    @media (max-width: 600px) {
+      #topStations { display: none; }
+      .quick-jump-group { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Interactive Leaflet Map & Synchronized Wind Particles Canvas -->
+  <div id="map"></div>
+  <canvas id="wind"></canvas>
+
+  <!-- TOP-LEFT: STATION SHORTCUTS (TẦNG 1) & SEARCH BAR (TẦNG 2) -->
+  <div id="topNavLeft">
+    <!-- TẦNG 1: 2 MONITORING STATIONS + TOÀN TỈNH SHORTCUTS -->
+    <div id="topStations">
+      <button class="station-btn active" id="btnStationNGLB" title="Thu phóng đến Trạm quan trắc NGLB (ĐH Sư Phạm, Liên Chiểu)">
+        <span class="pin">📍</span> <span class="full-label">Trạm NGLB (Sư Phạm)</span><span class="short-label">NGLB</span>
+      </button>
+      <button class="station-btn" id="btnStationTAKY" title="Thu phóng đến Trạm quan trắc TAKY (Tam Kỳ)">
+        <span class="pin">📍</span> <span class="full-label">Trạm TAKY (Tam Kỳ)</span><span class="short-label">TAKY</span>
+      </button>
+      <button class="station-btn" id="btnAllProvince" title="Xem toàn bộ phạm vi tỉnh Đà Nẵng (hợp nhất 9.861 ô lưới)">
+        <span>🌐</span> <span class="full-label">Toàn tỉnh</span><span class="short-label">Toàn tỉnh</span>
+      </button>
+    </div>
+
+    <!-- TẦNG 2: SEARCH BOX -->
+    <div class="search-box">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="searchInp" placeholder="Tìm kiếm địa điểm...">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+
+  <!-- TOP-CENTER: BRAND BADGE (FLOATING LOGO) -->
+  <div id="topLogoCenter">
+    <a href="#" class="windy-logo-center" id="btnLogo" title="Đặt lại góc nhìn toàn tỉnh Đà Nẵng">
+      <img src="logo.png" alt="AIR-URBAN LAB" class="logo-badge-center">
+    </a>
+  </div>
+
+  <!-- TOP-RIGHT: LIVE AQI & NAV MODALS -->
+  <div id="topNavRight">
+    <div id="livePill" title="Chất lượng không khí trung bình ngày hiện tại của toàn tỉnh Đà Nẵng">
+      <div class="live-dot"></div>
+      <span>TB Tỉnh:</span>
+      <span class="live-val" id="liveVal">—</span>
+      <span class="aqi-badge" id="liveAqi">TỐT</span>
+    </div>
+
+    <button class="nav-pill" id="btnDashboard">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      <span>Phân tích</span>
+    </button>
+    <button class="nav-pill" id="btnValidation">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span>Kiểm định AI</span>
+    </button>
+  </div>
+
+  <!-- RIGHT VERTICAL DOCK GROUP: LAYER DOCK + ZOOM CONTROLS -->
+  <div id="rightDockGroup">
+    <div id="layerDock" class="glass">
+      <div class="dock-title">Lớp Dữ Liệu</div>
+      <div class="layer-item-check" id="layPm25" title="Bật/tắt hiển thị lớp bụi mịn PM2.5 (CatBoost 1 km)">
+        <span><span class="icon">🌫️</span> PM2.5 (CatBoost)</span>
+        <input type="checkbox" id="chkPm25" checked style="accent-color:var(--brand-red)">
+      </div>
+      <div class="layer-item-check" id="layWind" title="Bật/tắt hiển thị luồng hạt gió động (ERA5)">
+        <span><span class="icon">🍃</span> Hạt gió (ERA5)</span>
+        <input type="checkbox" id="chkWind" checked style="accent-color:var(--brand-red)">
+      </div>
+      <div class="layer-item-check" id="layAoa" title="Bật/tắt mặt nạ vùng tin cậy AOA">
+        <span><span class="icon">🛡️</span> Mặt nạ AOA</span>
+        <input type="checkbox" id="chkAoa" checked style="accent-color:var(--brand-red)">
+      </div>
+
+      <!-- BASEMAP SWITCHER (GOOGLE MAPS) -->
+      <div class="basemap-box">
+        <div class="dock-title" style="padding:0">Bản Đồ Nền</div>
+        <select class="basemap-select" id="selBasemap">
+          <option value="googleRoad">Đường phố</option>
+          <option value="googleHybrid" selected>Vệ tinh</option>
+        </select>
+      </div>
+
+      <!-- OPACITY SLIDER -->
+      <div class="slider-row">
+        <span>Độ mờ PM2.5: <b id="lblOpacity">72%</b></span>
+        <input type="range" id="rngOpacity" min="15" max="100" value="72">
+      </div>
+    </div>
+
+    <!-- WINDY ZOOM CONTROLS (PHÓNG TO / THU NHỎ NẰM DƯỚI LỚP DỮ LIỆU) -->
+    <div id="zoomControls" class="glass" aria-label="Điều khiển thu phóng bản đồ">
+      <button id="btnZoomIn" class="zoom-btn" title="Phóng to bản đồ (+)" aria-label="Phóng to">
+        <svg viewBox="0 0 20 20" width="16" height="16">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="zoom-divider"></div>
+      <button id="btnZoomOut" class="zoom-btn" title="Thu nhỏ bản đồ (-)" aria-label="Thu nhỏ">
+        <svg viewBox="0 0 20 20" width="16" height="16">
+          <path d="M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING LEGEND (BOTTOM RIGHT - SINGLE UNIFIED COLOR BAR) -->
+  <div id="legendBox" class="glass">
+    <div class="leg-header">
+      <span>Bụi mịn PM2.5</span>
+      <span style="font-family:var(--f-num);color:var(--mute);font-size:10px">µg/m³</span>
+    </div>
+    <div id="legbar"></div>
+    <div id="legticks"></div>
+  </div>
+
+  <!-- HOVER TOOLTIP & TOAST NOTIFICATION -->
+  <div id="tip" class="glass" hidden>
+    <div class="tip-title" id="tipLoc">—</div>
+    <div class="tip-pm" id="tipPm">—</div>
+    <div style="font-size:11px;color:var(--mute);margin-top:2px" id="tipExtra">—</div>
+  </div>
+  <div id="toast"></div>
+
+  <!-- BOTTOM TIMELINE PLAYER (WINDY STYLE) -->
+  <div id="timeline">
+    <button id="playBtn" aria-label="Chạy / Dừng (Phím cách)">
+      <svg viewBox="0 0 20 20" id="playIco"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>
+    </button>
+    <button id="speedBtn" title="Tốc độ phát">1×</button>
+
+    <div class="quick-jump-group">
+      <button class="jump-chip" id="btnJumpMax" title="Chuyển đến ngày ô nhiễm cao nhất (11/04/2026)">🔥 Đỉnh ô nhiễm</button>
+      <button class="jump-chip" id="btnJumpMin" title="Chuyển đến ngày trong lành nhất (07/03/2025)">🍃 Trong lành nhất</button>
+      <input type="date" id="datePickerInput" min="2023-01-01" max="2026-09-15" title="Chọn ngày trong khoảng 01/01/2023 – 15/09/2026">
+    </div>
+
+    <div id="track" role="slider" tabindex="0" aria-label="Chọn ngày">
+      <div id="rail"></div>
+      <div id="fill"></div>
+      <div id="ticks"></div>
+      <div id="thumb"></div>
+      <div id="bubble">—</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM POINT FORECAST DRAWER -->
+  <section id="sheet" aria-label="Thông tin chi tiết ô lưới">
+    <!-- Nút thanh kéo tùy chỉnh độ cao -->
+    <div class="sheet-resizer" id="sheetResizer" title="Kéo lên / xuống để tùy chỉnh độ cao bảng (hoặc nhấp đúp để thu gọn/mở rộng)">
+      <div class="sheet-resizer-pill"></div>
+      <div class="sheet-resizer-hint">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7 15 12 20 17 15"/><polyline points="7 9 12 4 17 9"/></svg>
+        <span>Kéo chỉnh độ cao</span>
+      </div>
+    </div>
+    <div class="bar">
+      <button id="closeSheet" aria-label="Đóng" title="Đóng bảng">×</button>
+      <div style="margin-left:6px;min-width:0;flex:1">
+        <h2 id="sTitle" style="font-size:12px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">—</h2>
+        <div style="font-size:10px;color:#627282;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2" id="sSub">—</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <button id="prevW" class="jump-chip" style="color:#111a24;border-color:#cbd5e1;background:#fff;padding:2px 7px;font-size:10px;height:22px">‹ 7 ngày</button>
+        <button id="nextW" class="jump-chip" style="color:#111a24;border-color:#cbd5e1;background:#fff;padding:2px 7px;font-size:10px;height:22px">7 ngày ›</button>
+        <button id="btnToggleSheet" class="jump-chip" style="color:#111a24;border-color:#cbd5e1;background:#fff;display:inline-flex;align-items:center;gap:3px;font-weight:600;padding:2px 7px;font-size:10px;height:22px" title="Thu gọn / Mở rộng bảng">
+          <svg id="iconToggleSheet" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          <span id="lblToggleSheet">Thu gọn</span>
+        </button>
+      </div>
+    </div>
+    <div class="body">
+      <div class="left">
+        <canvas id="spark" aria-label="Chuỗi thời gian 4 năm"></canvas>
+        <div class="gridwrap"><table class="mg" id="mg"></table></div>
+      </div>
+      <aside id="sheetAbout"></aside>
+    </div>
+  </section>
+
+  <!-- MODAL: PHÂN TÍCH TỈNH ĐÀ NẴNG (DASHBOARD) -->
+  <div class="modal-overlay" id="modalDashboard" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="closeDashboard">×</button>
+      <div class="modal-head" style="display:flex;align-items:center;gap:14px">
+        <img src="logo.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
+        <div>
+          <h2>Phân Tích Chất Lượng Không Khí Bụi Mịn PM<sub>2.5</sub> Tỉnh Đà Nẵng</h2>
+          <p>Phân tích tổng hợp toàn bộ 9.861 ô lưới 1 km trên địa bàn tỉnh Đà Nẵng (hợp nhất toàn vùng) suốt 1.354 ngày từ 2023 đến 2026.</p>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-box">
+          <div class="lbl">PM2.5 TRUNG BÌNH TOÀN TỈNH</div>
+          <div class="val" style="color:#38bdf8">22,3 <span style="font-size:13px;color:var(--mute)">µg/m³</span></div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Đạt chuẩn QCVN 05:2023 (50 µg/m³)</div>
+        </div>
+        <div class="kpi-box">
+          <div class="lbl">TỶ LỆ ĐẠT CHUẨN WHO 2021</div>
+          <div class="val" style="color:#10b981">24,5%</div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Nồng độ 24h &lt; 15 µg/m³</div>
+        </div>
+        <div class="kpi-box">
+          <div class="lbl">TỶ LỆ ĐẠT CHUẨN QUỐC GIA</div>
+          <div class="val" style="color:#f59e0b">98,9%</div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Chỉ ~12 ngày vượt ngưỡng 50 µg/m³</div>
+        </div>
+        <div class="kpi-box">
+          <div class="lbl">ĐỘ TIN CẬY MÔ HÌNH (AOA)</div>
+          <div class="val" style="color:#a855f7">99,2%</div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Thuộc miền áp dụng an toàn</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:14px;margin-bottom:14px">
+        <h3 style="font-size:14px;margin-bottom:6px">Chu Kỳ Biến Thiên 12 Tháng Tại Tỉnh Đà Nẵng</h3>
+        <p style="font-size:12px;color:var(--mute);margin-bottom:10px">Quy luật mùa: Đỉnh ô nhiễm vào tháng 4 (37,5 µg/m³) do gió mùa Tây Nam khô nóng và khói bụi cháy sinh khối; trong lành nhất vào tháng 10 (16,0 µg/m³) nhờ lượng mưa lớn rửa trôi.</p>
+        <div id="seasonBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KIỂM ĐỊNH MÔ HÌNH AI -->
+  <div class="modal-overlay" id="modalValidation" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="closeValidation">×</button>
+      <div class="modal-head" style="display:flex;align-items:center;gap:14px">
+        <img src="logo.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
+        <div>
+          <h2>Kết Quả Kiểm Định Mô Hình AI So Với CAMS & 2 Trạm Quan Trắc</h2>
+          <p>Đánh giá khách quan 5 mô hình Machine Learning qua 4 phương pháp kiểm định không gian - thời gian Meyer tại 2 trạm NGLB (Sư Phạm) và TAKY (Tam Kỳ).</p>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;margin-bottom:16px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.05);color:var(--mute)">
+              <th style="padding:8px;text-align:left">Mô hình</th>
+              <th style="padding:8px;text-align:left">Kiểu kiểm định</th>
+              <th style="padding:8px;text-align:left">R²</th>
+              <th style="padding:8px;text-align:left">RMSE (µg/m³)</th>
+              <th style="padding:8px;text-align:left">MBE (µg/m³)</th>
+              <th style="padding:8px;text-align:left">R² Trạm NGLB</th>
+              <th style="padding:8px;text-align:left">R² Trạm TAKY</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:rgba(237,85,59,0.15);font-weight:600">
+              <td style="padding:8px">CatBoost trực tiếp (Lựa chọn)</td>
+              <td style="padding:8px">Random CV</td>
+              <td style="padding:8px;color:#10b981">0.697</td>
+              <td style="padding:8px">5.25</td>
+              <td style="padding:8px">+0.11</td>
+              <td style="padding:8px">0.688</td>
+              <td style="padding:8px">0.711</td>
+            </tr>
+            <tr style="background:rgba(237,85,59,0.1);font-weight:600">
+              <td style="padding:8px">CatBoost trực tiếp (Lựa chọn)</td>
+              <td style="padding:8px">LTO (Ngoại suy thời gian)</td>
+              <td style="padding:8px;color:#10b981">0.682</td>
+              <td style="padding:8px">5.96</td>
+              <td style="padding:8px">+1.26</td>
+              <td style="padding:8px">0.694</td>
+              <td style="padding:8px">0.651</td>
+            </tr>
+            <tr>
+              <td style="padding:8px">LightGBM trực tiếp</td>
+              <td style="padding:8px">Random CV</td>
+              <td style="padding:8px">0.676</td>
+              <td style="padding:8px">5.42</td>
+              <td style="padding:8px">+0.11</td>
+              <td style="padding:8px">0.672</td>
+              <td style="padding:8px">0.682</td>
+            </tr>
+            <tr>
+              <td style="padding:8px">XGBoost trực tiếp</td>
+              <td style="padding:8px">Random CV</td>
+              <td style="padding:8px">0.674</td>
+              <td style="padding:8px">5.44</td>
+              <td style="padding:8px">+0.09</td>
+              <td style="padding:8px">0.671</td>
+              <td style="padding:8px">0.679</td>
+            </tr>
+            <tr>
+              <td style="padding:8px">Random Forest trực tiếp</td>
+              <td style="padding:8px">Random CV</td>
+              <td style="padding:8px">0.661</td>
+              <td style="padding:8px">5.55</td>
+              <td style="padding:8px">+0.09</td>
+              <td style="padding:8px">0.648</td>
+              <td style="padding:8px">0.683</td>
+            </tr>
+            <tr>
+              <td style="padding:8px">CAMS gốc (Vệ tinh châu Âu)</td>
+              <td style="padding:8px">Không hiệu chỉnh</td>
+              <td style="padding:8px;color:var(--bad)">0.183</td>
+              <td style="padding:8px">8.61</td>
+              <td style="padding:8px">-1.79</td>
+              <td style="padding:8px">—</td>
+              <td style="padding:8px">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:14px">
+        <h3 style="font-size:14px;margin-bottom:6px">Tầm Quan Trọng Của 13 Biến Đầu Vào</h3>
+        <div id="featBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING SPINNER -->
+  <div id="loading">
+    <div style="text-align:center;max-width:360px;padding:24px">
+      <img src="logo.png" alt="Logo" style="height:62px;width:auto;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.85)) drop-shadow(0 0 2px rgba(255,255,255,0.45));margin-bottom:16px;display:inline-block">
+      <div class="spinner"></div>
+      <b style="font-size:15px;color:#fff;display:block;margin-top:6px">Đang Tải Bản Đồ PM2.5 Đà Nẵng</b>
+      <div style="font-size:12px;color:var(--mute);margin-top:8px" id="prog">Đang kết nối máy chủ dữ liệu...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function() {
+  "use strict";
+
+  const t_start = performance.now();
+  const $ = id => document.getElementById(id);
+  const prog = $('prog');
+  let nLoaded = 0;
+
+  async function getBin(name) {
+    // 1. Thử nạp trực tiếp file nhị phân .bin (tốc độ siêu nhanh <50ms, không tốn giải mã base64)
+    try {
+      const r = await fetch('data/' + name + '.bin');
+      if (r.ok) {
+        const ab = await r.arrayBuffer();
+        nLoaded++;
+        prog.textContent = 'Đang nạp dữ liệu: ' + nLoaded + ' / 12 tệp hoàn tất';
+        return ab;
+      }
+    } catch(e) {}
+
+    // 2. Dự phòng nạp file .txt nén gzip base64 nếu chạy ở môi trường cũ
+    const r = await fetch('data/' + name + '.txt');
+    if (!r.ok) throw new Error(name + ': ' + r.status);
+    const s64 = (await r.text()).trim(), bin = atob(s64), b = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+    let out = b.buffer;
+    if (b[0] === 0x1f && b[1] === 0x8b) {
+      const s = new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'));
+      out = await new Response(s).arrayBuffer();
+    }
+    nLoaded++;
+    prog.textContent = 'Đang nạp dữ liệu: ' + nLoaded + ' / 12 tệp hoàn tất';
+    return out;
+  }
+
+  let M;
+  let daNangGeoJson = null;
+  try {
+    prog.textContent = 'Đang nạp cấu hình hệ thống...';
+    const metaRes = await fetch('data/meta.json');
+    if (!metaRes.ok) throw new Error('Không thể tải meta.json (' + metaRes.status + ')');
+    M = await metaRes.json();
+    try {
+      const geoRes = await fetch('data/danang_boundary.geojson');
+      if (geoRes.ok) daNangGeoJson = await geoRes.json();
+    } catch (_) {}
+    nLoaded = 2;
+    prog.textContent = 'Đang nạp dữ liệu: 2 / 12 tệp...';
+  } catch(e) {
+    prog.innerHTML = '<span style="color:#ef4444">Lỗi: ' + e.message + '<br>Hãy đảm bảo khởi chạy bằng python chay_web.py</span>';
+    return;
+  }
+
+  function showToast(msg) {
+    let t = $('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      document.body.appendChild(t);
+    }
+    t.innerHTML = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3800);
+  }
+
+  const years = Object.keys(M.nam);
+  const C = M.o_i.length, N = M.so_ngay, H = M.H, W = M.W;
+  let PM, AOA, ERA, RAIN;
+
+  try {
+    const parts = await Promise.all([
+      ...years.map(y => getBin('pm25_' + y)),
+      ...years.map(y => getBin('aoa_' + y)),
+      getBin('era5'),
+      getBin('chirps')
+    ]);
+    const cat = arr => {
+      const n = arr.reduce((a, b) => a + b.byteLength, 0);
+      const o = new Uint8Array(n);
+      let p = 0;
+      for (const a of arr) { o.set(new Uint8Array(a), p); p += a.byteLength; }
+      return o;
+    };
+    PM = cat(parts.slice(0, years.length));
+    AOA = cat(parts.slice(years.length, 2 * years.length));
+    ERA = new Int16Array(parts[2 * years.length]);
+    RAIN = new Uint16Array(parts[2 * years.length + 1]);
+    prog.textContent = 'Khởi tạo không gian bản đồ và lưới 1 km...';
+  } catch(e) {
+    prog.textContent = 'Lỗi nạp dữ liệu: ' + e.message;
+    return;
+  }
+
+  /* GEOMETRY & SPATIAL BOUNDS */
+  const X0 = M.x0, Y0 = M.y0, DX = M.dx;
+  const LAT_SOUTH = Y0 - H * DX; // 14.95
+  const LAT_NORTH = Y0;          // 16.25
+  const LON_WEST = X0;           // 107.20
+  const LON_EAST = X0 + W * DX;  // 108.76
+  const RASTER_BOUNDS = [[LAT_SOUTH, LON_WEST], [LAT_NORTH, LON_EAST]];
+
+  const cellOf = new Int32Array(H * W).fill(-1);
+  for (let c = 0; c < C; c++) cellOf[M.o_i[c] * W + M.o_j[c]] = c;
+
+  const T0 = Date.UTC(+M.ngay_dau.slice(0, 4), +M.ngay_dau.slice(5, 7) - 1, +M.ngay_dau.slice(8, 10));
+  const dayDate = k => new Date(T0 + k * 86400000);
+  const THU = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+  const THU_NGAN = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const pad = n => String(n).padStart(2, '0');
+  const fmtD = d => pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear();
+  const fmtISO = d => d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+
+  /* GRID METEOROLOGY & BILINEAR INTERPOLATION SETUP */
+  function wts(lat0, dlat, nlat, lon0, dlon, nlon, la, lo) {
+    let fr = (la - lat0) / dlat, fc = (lo - lon0) / dlon;
+    let r0 = Math.min(Math.max(Math.floor(fr), 0), nlat - 2), c0 = Math.min(Math.max(Math.floor(fc), 0), nlon - 2);
+    const wy = fr - r0, wx = fc - c0;
+    return {
+      idx: [[r0, c0], [r0, c0 + 1], [r0 + 1, c0], [r0 + 1, c0 + 1]],
+      w: [(1 - wy) * (1 - wx), (1 - wy) * wx, wy * (1 - wx), wy * wx]
+    };
+  }
+  const EL = M.era_lat, EO = M.era_lon, ENL = EL.length, ENO = EO.length, EG = ENL * ENO;
+  const CL = M.chirps_lat, CO = M.chirps_lon, CNL = CL.length, CNO = CO.length, CG = CNL * CNO;
+
+  function eraAt(k, wE, v) {
+    let s = 0;
+    for (let q = 0; q < 4; q++) {
+      const [r, c] = wE.idx[q];
+      s += wE.w[q] * ERA[(k * 6 + v) * EG + r * ENO + c];
+    }
+    return s;
+  }
+  function rainAt(k, wR) {
+    let s = 0, ws = 0;
+    for (let q = 0; q < 4; q++) {
+      const [r, c] = wR.idx[q];
+      if (!M.chirps_dat[r * CNO + c]) continue;
+      const x = RAIN[k * CG + r * CNO + c];
+      if (x === 65535) continue;
+      s += wR.w[q] * x / 10;
+      ws += wR.w[q];
+    }
+    return ws > 0 ? s / ws : 0;
+  }
+
+  const pmAt = (k, c) => {
+    const q = PM[k * C + c];
+    return q === 255 ? NaN : q * M.buoc_pm;
+  };
+  const aoaAt = (k, c) => AOA[k * C + c];
+
+  // Precompute bilinear weights for all C grid cells for instant variable rendering
+  const cellWts = new Array(C);
+  for (let c = 0; c < C; c++) {
+    const la = Y0 - (M.o_i[c] + 0.5) * DX;
+    const lo = X0 + (M.o_j[c] + 0.5) * DX;
+    cellWts[c] = {
+      la, lo,
+      wE: wts(EL[0], EL[1] - EL[0], ENL, EO[0], EO[1] - EO[0], ENO, la, lo),
+      wR: wts(CL[0], CL[1] - CL[0], CNL, CO[0], CO[1] - CO[0], CNO, la, lo)
+    };
+  }
+
+  /* LEAFLET MAP & REAL BASEMAP TILES */
+  const map = L.map('map', {
+    center: [15.80, 108.05],
+    zoom: 10,
+    minZoom: 8,
+    maxZoom: 17,
+    zoomControl: false,
+    attributionControl: false
+  });
+
+  const BASEMAPS = {
+    googleRoad: L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      subdomains: '0123', maxZoom: 20
+    }),
+    googleHybrid: L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      subdomains: '0123', maxZoom: 20
+    })
+  };
+  BASEMAPS.googleRoad.addTo(map);
+
+  $('selBasemap').onchange = e => {
+    Object.values(BASEMAPS).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    BASEMAPS[e.target.value].addTo(map);
+  };
+
+  /* COLOR INTERPOLATION HELPER */
+  function interpColor(stops, v) {
+    if (v <= stops[0][0]) return stops[0][1];
+    for (let i = 1; i < stops.length; i++) {
+      if (v <= stops[i][0]) {
+        const [a, ca] = stops[i - 1], [b, cb] = stops[i];
+        if (b === a) return cb;
+        const t = (v - a) / (b - a);
+        return [0, 1, 2].map(j => Math.round(ca[j] + (cb[j] - ca[j]) * t));
+      }
+    }
+    return stops[stops.length - 1][1];
+  }
+
+  /* PM2.5 TURBO PALETTE (OFFICIAL SCIENTIFIC CONTINUOUS GRADIENT) */
+  const STOPS_TURBO = [
+    [0, [48, 18, 59]], [15, [70, 134, 251]], [25, [27, 229, 181]],
+    [37.5, [164, 252, 60]], [50, [251, 185, 56]], [75, [227, 79, 38]], [100, [122, 4, 3]]
+  ];
+
+  const getPmStops = () => STOPS_TURBO;
+  const rgb = v => interpColor(STOPS_TURBO, v);
+  const css = v => 'rgb(' + rgb(v).join(',') + ')';
+  const inkOn = v => {
+    const c = rgb(v);
+    return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) > 140 ? '#111a24' : '#fff';
+  };
+
+  /* PRECOMPUTED 32-BIT COLOR LOOKUP TABLE (0.05ms ULTRA-FAST PIXEL BUFFER GENERATION) */
+  const LUT_SIZE = 1500; // 0.0 to 150.0 ug/m3 in 0.1 increments
+  const pmLut32 = new Uint32Array(LUT_SIZE + 1);
+  function rebuildLut() {
+    for (let i = 0; i <= LUT_SIZE; i++) {
+      const v = i / 10;
+      const c = interpColor(STOPS_TURBO, v);
+      // Little-endian Uint32 (ABGR format for TypedArray -> RGBA pixels in memory)
+      pmLut32[i] = (255 << 24) | (c[2] << 16) | (c[1] << 8) | c[0];
+    }
+  }
+  rebuildLut();
+
+  function updateLegend() {
+    const bar = $('legbar'), ticks = $('legticks');
+    if (!bar || !ticks) return;
+    const nSteps = 24, legMax = 100;
+    bar.style.background = 'linear-gradient(to right,' +
+      Array.from({length: nSteps + 1}, (_, i) => css(i * legMax / nSteps) + ' ' + (i * 100 / nSteps) + '%').join(',') + ')';
+    ticks.innerHTML = [0, 15, 25, 50, 75, 100].map(v => '<span style="left:' + (v / legMax * 100) + '%">' + v + '</span>').join('');
+  }
+  updateLegend();
+
+  function getVnAqi(pm) {
+    if (!(pm >= 0)) return { aqi: '—', label: 'Thiếu dữ liệu', color: '#9aa7b4', bg: 'rgba(154,167,180,0.2)' };
+    if (pm <= 25) return { aqi: Math.round(pm * 50 / 25), label: 'Tốt', color: '#10b981', bg: 'rgba(16,185,129,0.2)' };
+    if (pm <= 50) return { aqi: Math.round(50 + (pm - 25) * 50 / 25), label: 'Trung bình', color: '#f59e0b', bg: 'rgba(245,158,11,0.2)' };
+    if (pm <= 75) return { aqi: Math.round(100 + (pm - 50) * 50 / 25), label: 'Kém', color: '#f97316', bg: 'rgba(249,115,22,0.2)' };
+    if (pm <= 150) return { aqi: Math.round(150 + (pm - 75) * 50 / 75), label: 'Xấu', color: '#ef4444', bg: 'rgba(239,68,68,0.2)' };
+    if (pm <= 250) return { aqi: Math.round(200 + (pm - 150) * 100 / 100), label: 'Rất xấu', color: '#a855f7', bg: 'rgba(168,85,247,0.2)' };
+    return { aqi: 300, label: 'Nguy hại', color: '#881337', bg: 'rgba(136,19,55,0.2)' };
+  }
+
+  /* HIGH-RESOLUTION PRE-COMPILED CLIPPING PATH FROM OFFICIAL SHAPEFILE */
+  const CW = 624, CH = 520; // 4x supersampling resolution for subpixel boundary clipping
+  function initDaNangClipPath(geojson, targetW, targetH) {
+    if (!geojson || !geojson.features || !geojson.features[0]) return null;
+    const p = new Path2D();
+    const geom = geojson.features[0].geometry;
+    const coords = geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates];
+    for (const poly of coords) {
+      for (const ring of poly) {
+        for (let i = 0; i < ring.length; i++) {
+          const lon = ring[i][0], lat = ring[i][1];
+          const px = (lon - X0) / (W * DX) * targetW;
+          const py = (Y0 - lat) / (H * DX) * targetH;
+          if (i === 0) p.moveTo(px, py);
+          else p.lineTo(px, py);
+        }
+        p.closePath();
+      }
+    }
+    return p;
+  }
+  const daNangClipPath = initDaNangClipPath(daNangGeoJson, CW, CH);
+
+  /* HIGH-PERFORMANCE NATIVE LEAFLET CANVAS OVERLAY (ZERO toDataURL / ZERO PNG OVERHEAD) */
+  const CanvasBoundsOverlay = L.Layer.extend({
+    initialize: function(bounds, options) {
+      this._bounds = L.latLngBounds(bounds);
+      L.setOptions(this, options);
+      this._canvas = document.createElement('canvas');
+      this._canvas.width = CW;
+      this._canvas.height = CH;
+      this._canvas.className = 'leaflet-zoom-animated';
+      this._canvas.style.position = 'absolute';
+      this._canvas.style.pointerEvents = 'none';
+      if (options && options.opacity !== undefined) {
+        this._canvas.style.opacity = options.opacity;
+      }
+      this._ctx = this._canvas.getContext('2d');
+    },
+    onAdd: function(map) {
+      this._map = map;
+      map.getPane('overlayPane').appendChild(this._canvas);
+      map.on('viewreset zoom zoomend moveend resize', this._reset, this);
+      if (map.options.zoomAnimation && L.Browser.any3d) {
+        map.on('zoomanim', this._animateZoom, this);
+      }
+      this._reset();
+    },
+    onRemove: function(map) {
+      if (this._canvas.parentNode) {
+        this._canvas.parentNode.removeChild(this._canvas);
+      }
+      map.off('viewreset zoom zoomend moveend resize', this._reset, this);
+      if (map.options.zoomAnimation && L.Browser.any3d) {
+        map.off('zoomanim', this._animateZoom, this);
+      }
+    },
+    _animateZoom: function(e) {
+      const scale = this._map.getZoomScale(e.zoom),
+            offset = this._map._latLngBoundsToNewLayerBounds(this._bounds, e.zoom, e.center).min;
+      L.DomUtil.setTransform(this._canvas, offset, scale);
+    },
+    _reset: function() {
+      const nw = this._map.latLngToLayerPoint(this._bounds.getNorthWest());
+      const se = this._map.latLngToLayerPoint(this._bounds.getSouthEast());
+      const size = se.subtract(nw);
+      L.DomUtil.setPosition(this._canvas, nw);
+      this._canvas.style.width = size.x + 'px';
+      this._canvas.style.height = size.y + 'px';
+    },
+    setOpacity: function(opacity) {
+      this.options.opacity = opacity;
+      if (this._canvas) this._canvas.style.opacity = opacity;
+      return this;
+    },
+    getCanvas: function() { return this._canvas; },
+    getContext: function() { return this._ctx; }
+  });
+
+  /* 1KM FAST MEMORY RASTER BUFFERS */
+  const offGrid = document.createElement('canvas'); offGrid.width = W; offGrid.height = H;
+  const gctx = offGrid.getContext('2d');
+  const pmImgData = gctx.createImageData(W, H);
+  const pmBuf32 = new Uint32Array(pmImgData.data.buffer);
+
+  const offGridA = document.createElement('canvas'); offGridA.width = W; offGridA.height = H;
+  const gctxA = offGridA.getContext('2d');
+  const aoaImgData = gctxA.createImageData(W, H);
+  const aoaBuf32 = new Uint32Array(aoaImgData.data.buffer);
+
+  let curOpacity = 0.72;
+  const pmOverlay = new CanvasBoundsOverlay(RASTER_BOUNDS, { opacity: curOpacity }).addTo(map);
+  const aoaOverlay = new CanvasBoundsOverlay(RASTER_BOUNDS, { opacity: 0.85 }).addTo(map);
+  const octx = pmOverlay.getContext();
+  const actx = aoaOverlay.getContext();
+
+  $('rngOpacity').oninput = e => {
+    curOpacity = +e.target.value / 100;
+    $('lblOpacity').textContent = e.target.value + '%';
+    pmOverlay.setOpacity(curOpacity);
+  };
+
+  /* RENDER VECTOR BOUNDARY FROM SHAPEFILE */
+  if (daNangGeoJson) {
+    L.geoJSON(daNangGeoJson, {
+      style: {
+        color: '#ffffff',
+        weight: 1.8,
+        opacity: 0.95,
+        fillColor: '#000000',
+        fillOpacity: 0
+      }
+    }).addTo(map);
+  }
+
+  let day = 0, sel = -1;
+
+  function paintDay() {
+    if (!$('chkPm25').checked) {
+      if (map.hasLayer(pmOverlay)) map.removeLayer(pmOverlay);
+    } else {
+      if (!map.hasLayer(pmOverlay)) pmOverlay.addTo(map);
+
+      pmBuf32.fill(0);
+      let sum = 0, cnt = 0;
+
+      for (let c = 0; c < C; c++) {
+        if (M.in_shp && !M.in_shp[c]) continue; // Cắt theo file shapefile Đà Nẵng
+        const v = pmAt(day, c);
+        if (v >= 0) {
+          const idx = Math.min(LUT_SIZE, (v * 10 + 0.5) | 0);
+          pmBuf32[M.o_i[c] * W + M.o_j[c]] = pmLut32[idx];
+          sum += v; cnt++;
+        }
+      }
+
+      gctx.putImageData(pmImgData, 0, 0);
+
+      octx.clearRect(0, 0, CW, CH);
+      octx.save();
+      if (daNangClipPath) octx.clip(daNangClipPath, 'evenodd');
+      octx.imageSmoothingEnabled = false;
+      octx.drawImage(offGrid, 0, 0, CW, CH);
+      octx.restore();
+
+      // Cập nhật thẻ trạng thái trung bình toàn tỉnh
+      if (cnt > 0) {
+        const avg = sum / cnt;
+        const q = getVnAqi(avg);
+        $('liveVal').textContent = avg.toFixed(1).replace('.', ',') + ' µg/m³';
+        $('liveAqi').textContent = q.label;
+        $('liveAqi').style.color = q.color;
+        $('liveAqi').style.background = q.bg;
+      } else {
+        $('liveVal').textContent = 'Thiếu dữ liệu';
+        $('liveAqi').textContent = '—';
+      }
+    }
+
+    if ($('chkAoa').checked) {
+      if (!map.hasLayer(aoaOverlay)) aoaOverlay.addTo(map);
+
+      aoaBuf32.fill(0);
+      for (let c = 0; c < C; c++) {
+        if (M.in_shp && !M.in_shp[c]) continue;
+        if (aoaAt(day, c) === 0) {
+          // rgba(14, 18, 24, 0.72) -> 0xB818120E (little-endian: A=0xB8, B=0x18, G=0x12, R=0x0E)
+          aoaBuf32[M.o_i[c] * W + M.o_j[c]] = 0xB818120E;
+        }
+      }
+
+      gctxA.putImageData(aoaImgData, 0, 0);
+
+      actx.clearRect(0, 0, CW, CH);
+      actx.save();
+      if (daNangClipPath) actx.clip(daNangClipPath, 'evenodd');
+      actx.imageSmoothingEnabled = false;
+      actx.drawImage(offGridA, 0, 0, CW, CH);
+      actx.restore();
+    } else {
+      if (map.hasLayer(aoaOverlay)) map.removeLayer(aoaOverlay);
+    }
+  }
+
+  $('chkPm25').onchange = () => {
+    $('layPm25').classList.toggle('active', $('chkPm25').checked);
+    paintDay();
+  };
+  $('chkAoa').onchange = () => {
+    $('layAoa').classList.toggle('active', $('chkAoa').checked);
+    paintDay();
+  };
+  $('chkWind').onchange = () => {
+    $('layWind').classList.toggle('active', $('chkWind').checked);
+    toggleWind();
+  };
+
+  /* STATION MARKERS (EXACT OFFICIAL COORDINATES) */
+  const STATIONS = {
+    NGLB: {
+      code: 'NGLB',
+      name: 'Đại học Sư Phạm',
+      lat: 16.061634,
+      lon: 108.160351,
+      address: 'Trường Đại học Sư Phạm – ĐH Đà Nẵng (459 Tôn Đức Thắng, Q. Liên Chiểu)'
+    },
+    TAKY: {
+      code: 'TAKY',
+      name: 'Tam Kỳ',
+      lat: 15.5621,
+      lon: 108.4867,
+      address: 'Trạm quan trắc Tam Kỳ (Tỉnh Đà Nẵng)'
+    }
+  };
+
+  const stationMarkers = {};
+  for (const [code, st] of Object.entries(STATIONS)) {
+    const marker = L.circleMarker([st.lat, st.lon], {
+      radius: 9, fillColor: '#ed553b', color: '#ffffff', weight: 2.5, fillOpacity: 0.95
+    }).addTo(map);
+    marker.bindTooltip(`<b>Trạm ${st.name}</b><br><span style="font-size:11px;color:#9aa7b4">${st.address}</span>`, {
+      direction: 'top', className: 'glass'
+    });
+    marker.on('click', () => zoomToStation(code));
+    stationMarkers[code] = marker;
+  }
+
+  // Selected location highlight pin marker (using diem.png icon from E:\Documents\New\điểm.png)
+  const selIcon = L.icon({
+    iconUrl: 'diem.png',
+    iconSize: [22, 26],
+    iconAnchor: [11, 26],
+    popupAnchor: [0, -26],
+    className: 'sel-diem-marker'
+  });
+  const selCircle = L.marker([0, 0], {
+    icon: selIcon,
+    zIndexOffset: 2000
+  });
+
+  let activeStationCode = null;
+
+  /* TOP STATION BUTTON ACTIONS (100% EXACT STATION COORDINATES) */
+  function zoomToStation(code) {
+    const st = STATIONS[code];
+    if (!st) return;
+    activeStationCode = code;
+    map.flyTo([st.lat, st.lon], 15, { duration: 1.2 });
+    document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+    if (code === 'NGLB') $('btnStationNGLB').classList.add('active');
+    if (code === 'TAKY') $('btnStationTAKY').classList.add('active');
+
+    // Pick raster cell for PM2.5 time-series data
+    const i = Math.floor((Y0 - st.lat) / DX), j = Math.floor((st.lon - X0) / DX);
+    const c = cellOf[i * W + j];
+    if (c >= 0 && (!M.in_shp || M.in_shp[c])) {
+      sel = c;
+      // 100% EXACT STATION COORDINATE HIGHLIGHT (CONCENTRIC WITH RED STATION MARKER)
+      selCircle.setLatLng([st.lat, st.lon]).addTo(map);
+      openSheet();
+    }
+  }
+
+  $('btnStationNGLB').onclick = () => zoomToStation('NGLB');
+  $('btnStationTAKY').onclick = () => zoomToStation('TAKY');
+  $('btnAllProvince').onclick = () => {
+    activeStationCode = null;
+    selCircle.remove();
+    map.flyToBounds(RASTER_BOUNDS, { padding: [40, 40], duration: 1.2 });
+    document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+    $('btnAllProvince').classList.add('active');
+  };
+  $('btnLogo').onclick = e => { e.preventDefault(); $('btnAllProvince').click(); };
+
+  /* ZOOM CONTROLS (PHÓNG TO / THU NHỎ) */
+  $('btnZoomIn').onclick = () => map.zoomIn();
+  $('btnZoomOut').onclick = () => map.zoomOut();
+
+  /* COMPREHENSIVE DA NANG LOCATIONS SEARCH (4,750+ POINTS & OSM GEOCODING) */
+  const SEED_LOCATIONS = [
+    { name: 'Trạm NGLB (Đại học Sư Phạm)', lat: 16.061634, lon: 108.160351, type: 'Trạm quan trắc' },
+    { name: 'Trạm TAKY (Tam Kỳ)', lat: 15.5621, lon: 108.4867, type: 'Trạm quan trắc' },
+    { name: 'Quận Hải Châu', lat: 16.050, lon: 108.220, type: 'Đô thị trung tâm' },
+    { name: 'Quận Thanh Khê', lat: 16.065, lon: 108.188, type: 'Đô thị trung tâm' },
+    { name: 'Quận Sơn Trà', lat: 16.085, lon: 108.250, type: 'Bán đảo du lịch' },
+    { name: 'Quận Ngũ Hành Sơn', lat: 16.000, lon: 108.255, type: 'Khu dân cư' },
+    { name: 'Quận Liên Chiểu', lat: 16.060, lon: 108.140, type: 'KCN & Đô thị' },
+    { name: 'Quận Cẩm Lệ', lat: 16.020, lon: 108.200, type: 'Khu đô thị mới' },
+    { name: 'Huyện Hòa Vang', lat: 15.980, lon: 108.060, type: 'Khu vực phía Tây' },
+    { name: 'Thành phố Tam Kỳ', lat: 15.5621, lon: 108.4867, type: 'Đô thị phía Nam' },
+    { name: 'Đô thị cổ Hội An', lat: 15.880, lon: 108.335, type: 'Phố cổ di sản' },
+    { name: 'Thị xã Điện Bàn', lat: 15.900, lon: 108.250, type: 'Đô thị ven sông' },
+    { name: 'Huyện Đại Lộc', lat: 15.880, lon: 107.980, type: 'Đồng bằng' },
+    { name: 'Huyện Duy Xuyên', lat: 15.830, lon: 108.220, type: 'Mỹ Sơn' },
+    { name: 'Huyện Thăng Bình', lat: 15.730, lon: 108.370, type: 'Ven biển' },
+    { name: 'Huyện Núi Thành', lat: 15.420, lon: 108.650, type: 'Khu kinh tế mở' },
+    { name: 'Bà Nà Hills', lat: 15.998, lon: 107.988, type: 'Khu sinh thái' },
+    { name: 'Bán đảo Sơn Trà', lat: 16.115, lon: 108.285, type: 'Khu bảo tồn' },
+    { name: 'Đèo Hải Vân', lat: 16.195, lon: 108.132, type: 'Cảnh quan' },
+    { name: 'Cầu Rồng', lat: 16.061, lon: 108.227, type: 'Biểu tượng' },
+    { name: 'Sân bay Quốc tế Đà Nẵng', lat: 16.044, lon: 108.199, type: 'Hàng không' }
+  ];
+
+  let searchLocations = [...SEED_LOCATIONS];
+  fetch('data/danang_locations.json')
+    .then(r => r.json())
+    .then(data => {
+      if (Array.isArray(data) && data.length) {
+        searchLocations = data;
+        console.log(`[Search] Nạp thành công ${data.length} địa điểm toàn tỉnh Đà Nẵng`);
+      }
+    })
+    .catch(err => console.warn('[Search] Sử dụng danh mục địa điểm cơ bản:', err));
+
+  function stripVn(str) {
+    if (!str) return '';
+    return str.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .toLowerCase()
+      .trim();
+  }
+
+  const searchInp = $('searchInp'), searchRes = $('searchResults');
+  let searchDebounce = null;
+
+  function renderSearchResults(matches, query) {
+    if (!matches || !matches.length) {
+      searchRes.innerHTML = `<div style="padding:10px 14px;font-size:12px;color:var(--mute)">Không tìm thấy địa điểm nào khớp với "${query}" trong vùng cắt Đà Nẵng</div>`;
+      searchRes.style.display = 'block';
+      return;
+    }
+    searchRes.innerHTML = matches.map(l => `
+      <div class="search-item" data-lat="${l.lat}" data-lon="${l.lon}" data-name="${l.name}">
+        <b>${l.name}</b> <span style="font-size:11px;color:var(--windy-red)">(${l.type})</span>
+        <span class="coord">${l.lat.toFixed(3)}°N, ${l.lon.toFixed(3)}°E</span>
+      </div>
+    `).join('');
+    searchRes.style.display = 'block';
+    searchRes.querySelectorAll('.search-item').forEach(el => el.onclick = () => {
+      selectLocation(+el.dataset.lat, +el.dataset.lon, el.dataset.name);
+    });
+  }
+
+  function selectLocation(lat, lon, name) {
+    activeStationCode = null;
+    document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+    map.flyTo([lat, lon], 14, { duration: 1.2 });
+    searchRes.style.display = 'none';
+    searchInp.value = name;
+    selCircle.setLatLng([lat, lon]).addTo(map);
+    const i = Math.floor((Y0 - lat) / DX);
+    const j = Math.floor((lon - X0) / DX);
+    if (i >= 0 && i < H && j >= 0 && j < W) {
+      const c = cellOf[i * W + j];
+      if (c !== undefined && (!M.in_shp || M.in_shp[c])) {
+        sel = c;
+        setTimeout(() => openSheet(), 600);
+      }
+    }
+  }
+
+  searchInp.oninput = () => {
+    clearTimeout(searchDebounce);
+    const rawQ = searchInp.value.trim();
+    if (!rawQ) { searchRes.style.display = 'none'; return; }
+    const q = stripVn(rawQ);
+
+    // 1. Tìm tức thì trong cơ sở dữ liệu 4.750 địa điểm nội tỉnh Đà Nẵng (<1ms)
+    const localMatches = [];
+    for (let i = 0; i < searchLocations.length; i++) {
+      const loc = searchLocations[i];
+      const n = stripVn(loc.name);
+      const t = stripVn(loc.type);
+      if (n.includes(q) || t.includes(q)) {
+        localMatches.push(loc);
+        if (localMatches.length >= 20) break;
+      }
+    }
+    renderSearchResults(localMatches, rawQ);
+
+    // 2. Tra cứu trực tuyến mở rộng (Photon / OSM) giới hạn nghiêm ngặt trong vùng cắt Đà Nẵng
+    if (rawQ.length >= 3) {
+      searchDebounce = setTimeout(async () => {
+        try {
+          const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(rawQ)}&bbox=107.15,14.90,108.80,16.35&limit=8`;
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.features && data.features.length) {
+              const apiLocs = data.features.map(f => {
+                const p = f.properties || {};
+                const name = [p.name, p.street, p.district, p.city].filter(Boolean).join(', ') || p.name;
+                return {
+                  name: name || rawQ,
+                  lat: f.geometry.coordinates[1],
+                  lon: f.geometry.coordinates[0],
+                  type: p.type || p.osm_value || 'Địa điểm'
+                };
+              }).filter(l => l.lat >= 14.90 && l.lat <= 16.35 && l.lon >= 107.15 && l.lon <= 108.80);
+
+              const combined = [...localMatches];
+              apiLocs.forEach(al => {
+                if (!combined.some(cl => Math.abs(cl.lat - al.lat) < 0.005 && Math.abs(cl.lon - al.lon) < 0.005)) {
+                  combined.push(al);
+                }
+              });
+              renderSearchResults(combined.slice(0, 20), rawQ);
+            }
+          }
+        } catch (_) {}
+      }, 350);
+    }
+  };
+
+  document.addEventListener('click', e => { if (!e.target.closest('.search-box')) searchRes.style.display = 'none'; });
+
+  /* WIND PARTICLES OVERLAY CANVAS (WITH ZOOM ADAPTATION) */
+  const wv = $('wind'), wctx = wv.getContext('2d');
+  let dpr = 1;
+
+  function resizeWindCanvas() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const size = map.getSize();
+    wv.width = size.x * dpr;
+    wv.height = size.y * dpr;
+  }
+  resizeWindCanvas();
+  map.on('resize', resizeWindCanvas);
+
+  function uvAt(lo, la) {
+    const w = wts(EL[0], EL[1] - EL[0], ENL, EO[0], EO[1] - EO[0], ENO, la, lo);
+    return [eraAt(day, w, 4) / 100, eraAt(day, w, 5) / 100];
+  }
+
+  let parts = [], raf = null;
+  function clearWind() {
+    wctx.setTransform(1, 0, 0, 1, 0, 0);
+    wctx.clearRect(0, 0, wv.width, wv.height);
+  }
+
+  function seedScreen(p, size) {
+    p.x = Math.random() * size.x;
+    p.y = Math.random() * size.y;
+    p.age = (Math.random() * 80) | 0;
+    return p;
+  }
+
+  function windLoop() {
+    const size = map.getSize();
+    const zoom = map.getZoom();
+    wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    wctx.globalCompositeOperation = 'destination-in';
+    wctx.fillStyle = 'rgba(0,0,0,0.84)'; // Fast fade to prevent hazy screen buildup
+    wctx.fillRect(0, 0, size.x, size.y);
+
+    wctx.globalCompositeOperation = 'source-over';
+    // When zoomed in, keep particles delicate and thin so they NEVER obscure streets
+    wctx.strokeStyle = zoom >= 13 ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.42)';
+    wctx.lineWidth = zoom >= 13 ? 0.75 : 1.1;
+    wctx.beginPath();
+
+    // Fast screen-to-geographic affine mapping (computed ONCE per frame, eliminating 72,000 Mercator transforms/sec)
+    const nw = map.containerPointToLatLng([0, 0]);
+    const se = map.containerPointToLatLng([size.x, size.y]);
+    const invW = 1 / size.x, invH = 1 / size.y;
+    const dLon = se.lng - nw.lng;
+    const dLat = se.lat - nw.lat;
+
+    const zoomFactor = Math.pow(2, Math.max(0, zoom - 9));
+    const speedScale = 0.55 / Math.sqrt(zoomFactor);
+
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (p.age-- <= 0 || p.x < 0 || p.x > size.x || p.y < 0 || p.y > size.y) {
+        seedScreen(p, size); continue;
+      }
+      const lo = nw.lng + p.x * invW * dLon;
+      const la = nw.lat + p.y * invH * dLat;
+      if (lo < EO[0] || lo > EO[ENO - 1] || la < EL[0] || la > EL[ENL - 1]) {
+        seedScreen(p, size); continue;
+      }
+      const [u, v] = uvAt(lo, la);
+      const dx = u * speedScale;
+      const dy = -v * speedScale;
+      wctx.moveTo(p.x, p.y);
+      p.x += dx;
+      p.y += dy;
+      wctx.lineTo(p.x, p.y);
+    }
+    wctx.stroke();
+    raf = requestAnimationFrame(windLoop);
+  }
+
+  function reseedWind() {
+    if (!$('chkWind').checked) return;
+    const size = map.getSize();
+    const zoom = map.getZoom();
+    const baseCount = Math.round(Math.min(420, size.x * size.y / 3000));
+    const count = zoom >= 13 ? Math.round(baseCount * 0.35) : baseCount;
+    parts = Array.from({ length: count }, () => seedScreen({}, size));
+  }
+
+  function toggleWind() {
+    if ($('chkWind').checked) {
+      reseedWind();
+      if (!raf) windLoop();
+    } else {
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      clearWind();
+    }
+  }
+  $('chkWind').onchange = () => {
+    $('layWind').classList.toggle('active', $('chkWind').checked);
+    toggleWind();
+  };
+
+  // Immediate clearing on map pan & zoom to eliminate ghost streaks
+  map.on('zoomstart movestart', clearWind);
+  map.on('zoomend moveend', () => { clearWind(); reseedWind(); });
+
+  /* MAP INTERACTION: CLICK & HOVER (CLIPPED TO SHAPEFILE) */
+  map.on('click', e => {
+    activeStationCode = null;
+    document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+    const la = e.latlng.lat, lo = e.latlng.lng;
+    const i = Math.floor((Y0 - la) / DX);
+    const j = Math.floor((lo - X0) / DX);
+    if (i >= 0 && i < H && j >= 0 && j < W) {
+      const c = cellOf[i * W + j];
+      if (c >= 0 && (!M.in_shp || M.in_shp[c])) {
+        sel = c;
+        selCircle.setLatLng([la, lo]).addTo(map);
+        openSheet();
+      }
+    }
+  });
+
+  const tip = $('tip');
+  map.on('mousemove', e => {
+    const la = e.latlng.lat, lo = e.latlng.lng;
+    const i = Math.floor((Y0 - la) / DX);
+    const j = Math.floor((lo - X0) / DX);
+    if (i >= 0 && i < H && j >= 0 && j < W) {
+      const c = cellOf[i * W + j];
+      if (c >= 0 && (!M.in_shp || M.in_shp[c])) {
+        const vPm = pmAt(day, c);
+        const inA = aoaAt(day, c) === 1;
+
+        tip.hidden = false;
+        tip.style.left = (e.containerPoint.x + 12) + 'px';
+        tip.style.top = (e.containerPoint.y + 12) + 'px';
+        $('tipLoc').textContent = `Tỉnh Đà Nẵng (${la.toFixed(3)}°N, ${lo.toFixed(3)}°E)`;
+
+        const q = getVnAqi(vPm);
+        $('tipPm').innerHTML = `${vPm >= 0 ? vPm.toFixed(1).replace('.', ',') + ' µg/m³' : '—'} · <span style="color:${q.color}">${q.label}</span>`;
+        $('tipExtra').innerHTML = inA ? '<span style="color:#10b981">Trong miền tin cậy AOA</span>' : '<span style="color:#ef4444">⚠️ Ngoài miền AOA</span>';
+        return;
+      }
+    }
+    tip.hidden = true;
+  });
+  map.on('mouseout', () => { tip.hidden = true; });
+
+  /* TIMELINE SCRUBBING & PLAYBACK */
+  const track = $('track'), thumb = $('thumb'), fill = $('fill'), bubble = $('bubble');
+
+  (function buildTicks() {
+    const box = $('ticks');
+    let html = '';
+    for (let k = 0; k < N; k++) {
+      const d = dayDate(k);
+      if (d.getUTCDate() !== 1) continue;
+      const m = d.getUTCMonth();
+      const p = (k / (N - 1)) * 100;
+      if (m === 0) {
+        html += `<i style="left:${p}%"></i><span class="y" style="left:${p}%">${d.getUTCFullYear()}</span>`;
+      } else if (m % 3 === 0) {
+        html += `<i style="left:${p}%"></i><span style="left:${p}%">T${m + 1}</span>`;
+      } else {
+        html += `<i style="left:${p}%;height:3px;top:-7px"></i>`;
+      }
+    }
+    box.innerHTML = html;
+  })();
+
+  function placeThumb() {
+    const p = (day / (N - 1)) * 100;
+    thumb.style.left = p + '%';
+    fill.style.width = p + '%';
+    bubble.style.left = p + '%';
+    const d = dayDate(day);
+    bubble.textContent = `${THU[d.getUTCDay()]}, ${fmtD(d)}`;
+  }
+
+  let paintRaf = null;
+  function schedulePaint() {
+    if (paintRaf) return;
+    paintRaf = requestAnimationFrame(() => {
+      paintRaf = null;
+      paintDay();
+      if (sel >= 0) renderSheet();
+    });
+  }
+
+  function setDay(k, immediate = false) {
+    day = Math.max(0, Math.min(N - 1, k));
+    placeThumb();
+    $('datePickerInput').value = fmtISO(dayDate(day));
+    if (immediate) {
+      if (paintRaf) { cancelAnimationFrame(paintRaf); paintRaf = null; }
+      paintDay();
+      if (sel >= 0) renderSheet();
+    } else {
+      schedulePaint();
+    }
+  }
+
+  function dayFromX(cx) {
+    const r = track.getBoundingClientRect();
+    return Math.round(Math.max(0, Math.min(1, (cx - r.left) / r.width)) * (N - 1));
+  }
+
+  let dragT = false;
+  track.addEventListener('pointerdown', e => {
+    dragT = true; track.setPointerCapture(e.pointerId); stop(); setDay(dayFromX(e.clientX), false);
+  });
+  track.addEventListener('pointermove', e => { if (dragT) setDay(dayFromX(e.clientX), false); });
+  track.addEventListener('pointerup', e => {
+    if (dragT) { dragT = false; setDay(dayFromX(e.clientX), true); }
+  });
+  track.addEventListener('pointercancel', () => { dragT = false; });
+
+  const SPEEDS = [[1, 400], [2, 180], [4, 80]];
+  let sp = 0, timer = null;
+  const ICO_PLAY = '<path d="M5 3l12 7-12 7z" fill="currentColor"/>',
+        ICO_PAUSE = '<rect x="4" y="3" width="4" height="14" rx="1" fill="currentColor"/><rect x="12" y="3" width="4" height="14" rx="1" fill="currentColor"/>';
+
+  function play() {
+    if (day >= N - 1) setDay(0, true);
+    $('playIco').innerHTML = ICO_PAUSE;
+    timer = setInterval(() => {
+      if (day >= N - 1) { stop(); return; }
+      setDay(day + 1, true);
+    }, SPEEDS[sp][1]);
+  }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    $('playIco').innerHTML = ICO_PLAY;
+  }
+  $('playBtn').onclick = () => timer ? stop() : play();
+  $('speedBtn').onclick = () => {
+    sp = (sp + 1) % SPEEDS.length;
+    $('speedBtn').textContent = SPEEDS[sp][0] + '×';
+    if (timer) { stop(); play(); }
+  };
+
+  $('btnJumpMax').onclick = () => { stop(); setDay(1196, true); }; // 11/04/2026: Đỉnh ô nhiễm 57.4 ug/m3
+  $('btnJumpMin').onclick = () => { stop(); setDay(796, true); };  // 07/03/2025: Trong lành nhất 9.8 ug/m3
+  
+  const minDateStr = fmtISO(dayDate(0));
+  const maxDateStr = fmtISO(dayDate(N - 1));
+  $('datePickerInput').min = minDateStr;
+  $('datePickerInput').max = maxDateStr;
+
+  $('datePickerInput').onchange = e => {
+    const val = e.target.value;
+    if (!val) return;
+    const parts = val.split('-');
+    if (parts.length === 3) {
+      const targetTime = Date.UTC(+parts[0], +parts[1] - 1, +parts[2]);
+      const targetDay = Math.round((targetTime - T0) / 86400000);
+      if (targetDay < 0 || targetDay >= N) {
+        showToast(`⚠️ Dữ liệu chỉ khả dụng từ ngày <b>${fmtD(dayDate(0))}</b> đến <b>${fmtD(dayDate(N - 1))}</b>. Vui lòng chọn ngày trong khoảng này!`);
+        $('datePickerInput').value = fmtISO(dayDate(day));
+        return;
+      }
+      stop();
+      setDay(targetDay, true);
+    }
+  };
+
+  /* BOTTOM SHEET POINT DETAILS & DYNAMIC RESIZING */
+  const sheet = $('sheet');
+  const sheetResizer = $('sheetResizer');
+  const DEFAULT_DRAWER_HEIGHT = 270; // Windy-style ultra-compact default height
+  const MAX_DRAWER_HEIGHT = 295;     // Strict ceiling to prevent blocking map and empty space
+  const MIN_DRAWER_HEIGHT = 38;      // Collapsed header bar height
+
+  function getDefaultDrawerHeight() {
+    return Math.min(DEFAULT_DRAWER_HEIGHT, Math.max(MIN_DRAWER_HEIGHT, Math.round(window.innerHeight * 0.75)));
+  }
+
+  function getMaxDrawerHeight() {
+    return Math.min(MAX_DRAWER_HEIGHT, Math.max(MIN_DRAWER_HEIGHT + 100, Math.round(window.innerHeight * 0.75)));
+  }
+
+  let isDraggingSheet = false;
+  let dragStartY = 0;
+  let dragStartH = 0;
+
+  function updateToggleBtn(isCollapsed) {
+    const lbl = $('lblToggleSheet');
+    const icon = $('iconToggleSheet');
+    if (isCollapsed) {
+      if (lbl) lbl.textContent = 'Mở rộng';
+      if (icon) icon.innerHTML = '<polyline points="18 15 12 9 6 15"/>';
+    } else {
+      if (lbl) lbl.textContent = 'Thu gọn';
+      if (icon) icon.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
+    }
+  }
+
+  function openSheet() {
+    sheet.classList.add('open');
+    if (sheet.classList.contains('collapsed')) {
+      sheet.classList.remove('collapsed');
+      sheet.style.height = getDefaultDrawerHeight() + 'px';
+      updateToggleBtn(false);
+    } else if (!sheet.style.height || sheet.style.height === MIN_DRAWER_HEIGHT + 'px') {
+      sheet.style.height = getDefaultDrawerHeight() + 'px';
+    }
+    renderSheet();
+  }
+
+  function closeSheet() {
+    sheet.classList.remove('open');
+    sel = -1;
+    activeStationCode = null;
+    selCircle.remove();
+    document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  function toggleSheetCollapse() {
+    if (sheet.classList.contains('collapsed')) {
+      // Expand back: ALWAYS restore to standard default height, ignoring manual drag
+      sheet.classList.remove('collapsed');
+      sheet.style.height = getDefaultDrawerHeight() + 'px';
+      updateToggleBtn(false);
+      if (sel >= 0 && cache && cache.c >= 0) {
+        requestAnimationFrame(() => drawSpark(cache));
+      }
+    } else {
+      // Collapse to bar only (52px)
+      sheet.classList.add('collapsed');
+      sheet.style.height = MIN_DRAWER_HEIGHT + 'px';
+      updateToggleBtn(true);
+    }
+  }
+
+  $('closeSheet').onclick = closeSheet;
+  $('btnToggleSheet').onclick = toggleSheetCollapse;
+  sheetResizer.ondblclick = toggleSheetCollapse;
+  $('prevW').onclick = () => { stop(); setDay(day - 7, true); };
+  $('nextW').onclick = () => { stop(); setDay(day + 7, true); };
+
+  // Smooth pointer drag for custom height
+  sheetResizer.addEventListener('pointerdown', e => {
+    isDraggingSheet = true;
+    dragStartY = e.clientY;
+    dragStartH = sheet.getBoundingClientRect().height;
+    sheet.classList.add('dragging');
+    sheetResizer.setPointerCapture(e.pointerId);
+  });
+
+  sheetResizer.addEventListener('pointermove', e => {
+    if (!isDraggingSheet) return;
+    const delta = dragStartY - e.clientY; // drag up increases drawer height
+    let newH = dragStartH + delta;
+    const minH = MIN_DRAWER_HEIGHT;
+    const maxH = getMaxDrawerHeight();
+    newH = Math.max(minH, Math.min(maxH, newH));
+    sheet.style.height = newH + 'px';
+
+    if (newH <= 75) {
+      sheet.classList.add('collapsed');
+      updateToggleBtn(true);
+    } else {
+      sheet.classList.remove('collapsed');
+      updateToggleBtn(false);
+    }
+  });
+
+  const stopSheetDrag = e => {
+    if (!isDraggingSheet) return;
+    isDraggingSheet = false;
+    sheet.classList.remove('dragging');
+    try { sheetResizer.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (sel >= 0 && !sheet.classList.contains('collapsed') && cache && cache.c >= 0) {
+      drawSpark(cache);
+    }
+  };
+
+  sheetResizer.addEventListener('pointerup', stopSheetDrag);
+  sheetResizer.addEventListener('pointercancel', stopSheetDrag);
+
+  function hav(a, b, c, d) {
+    const R = 6371, r = Math.PI / 180, x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  let cache = { c: -1 };
+  function seriesFor(c) {
+    if (cache.c === c) return cache;
+    const v = new Float32Array(N);
+    let s = 0, n = 0, over = 0, inA = 0, nA = 0;
+    for (let k = 0; k < N; k++) {
+      const x = pmAt(k, c);
+      v[k] = x;
+      if (x >= 0) { s += x; n++; if (x > 50) over++; }
+      const a = aoaAt(k, c);
+      if (a < 2) { nA++; if (a === 1) inA++; }
+    }
+    const la = Y0 - (M.o_i[c] + 0.5) * DX, lo = X0 + (M.o_j[c] + 0.5) * DX;
+    cache = {
+      c, v, mean: s / n, over, n, aoa: inA / nA, la, lo,
+      wE: wts(EL[0], EL[1] - EL[0], ENL, EO[0], EO[1] - EO[0], ENO, la, lo),
+      wR: wts(CL[0], CL[1] - CL[0], CNL, CO[0], CO[1] - CO[0], CNO, la, lo)
+    };
+    return cache;
+  }
+
+  const f1 = x => (x >= 0 || x < 0) ? x.toFixed(1).replace('.', ',') : '—';
+  const arrowSVG = deg => `<svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(${deg}deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"/></svg>`;
+
+  function renderSheet() {
+    if (sel < 0) return;
+    const S = seriesFor(sel);
+    let near = null;
+    for (const [code, st] of Object.entries(STATIONS)) {
+      const d = hav(S.la, S.lo, st.lat, st.lon);
+      if (!near || d < near[1]) near = [code, d, st.name];
+    }
+
+    if (activeStationCode && STATIONS[activeStationCode]) {
+      const st = STATIONS[activeStationCode];
+      $('sTitle').textContent = `Trạm ${st.name} (${st.lat.toFixed(6)}°N, ${st.lon.toFixed(6)}°E)`;
+      $('sSub').textContent = `${st.address} · Vị trí trạm quan trắc chuẩn 100%`;
+    } else {
+      $('sTitle').textContent = `Tỉnh Đà Nẵng (${S.la.toFixed(3)}°N, ${S.lo.toFixed(3)}°E)`;
+      $('sSub').textContent = `Ô lưới 1 km · Cách ${near[2]} ${near[1].toFixed(1).replace('.', ',')} km`;
+    }
+
+    const k0 = Math.max(0, Math.min(N - 21, day - 10)), ks = [];
+    for (let k = k0; k < Math.min(N, k0 + 21); k++) ks.push(k);
+
+    const row = (label, fn, cls = '') => '<tr class="' + cls + '"><th>' + label + '</th>' +
+      ks.map(k => `<td data-k="${k}"${k === day ? ' class="now"' : ''}>${fn(k)}</td>`).join('') + '</tr>';
+
+    let monthRow = '<tr class="month"><th></th>';
+    let prevM = -1, span = 0, label = '';
+    const flush = () => { if (span) monthRow += `<td colspan="${span}"><span>${label}</span></td>`; };
+    for (const k of ks) {
+      const d = dayDate(k), m = d.getUTCMonth();
+      if (m !== prevM) { flush(); prevM = m; span = 0; label = 'Tháng ' + (m + 1) + '/' + d.getUTCFullYear(); }
+      span++;
+    }
+    flush(); monthRow += '</tr>';
+
+    const html = monthRow
+      + row('Ngày', k => { const d = dayDate(k); return THU_NGAN[d.getUTCDay()] + '<b>' + pad(d.getUTCDate()) + '</b>'; }, 'day')
+      + row('PM2.5 µg/m³', k => {
+          const v = pmAt(k, sel);
+          return v >= 0 ? `<span class="chip" style="background:${css(v)};color:${inkOn(v)}">${f1(v)}</span>` : '—';
+        })
+      + row('AOA (Tin cậy)', k => {
+          const a = aoaAt(k, sel);
+          return a === 1 ? '<span style="color:#10b981;font-weight:600">Trong</span>' : a === 0 ? '<span style="color:#ef4444;font-weight:600">Ngoài</span>' : '—';
+        })
+      + row('Nhiệt độ °C', k => f1(eraAt(k, S.wE, 0) / 100))
+      + row('Độ ẩm %', k => Math.round(eraAt(k, S.wE, 1) / 10))
+      + row('Mưa mm', k => {
+          const r = rainAt(k, S.wR);
+          return r >= 0.05 ? `<span style="color:#0284c7;font-weight:600">${f1(r)}</span>` : '<span style="color:#94a3b8">0</span>';
+        })
+      + row('Gió m/s', k => f1(eraAt(k, S.wE, 2) / 100))
+      + row('Hướng gió', k => {
+          const u = eraAt(k, S.wE, 4), v = eraAt(k, S.wE, 5);
+          return arrowSVG((Math.atan2(u, v) * 180 / Math.PI + 360) % 360);
+        })
+      + row('Lớp biên BLH', k => Math.round(eraAt(k, S.wE, 3)) + ' m');
+
+    const tb = $('mg');
+    tb.innerHTML = html;
+    tb.querySelectorAll('td[data-k]').forEach(td => td.onclick = () => { stop(); setDay(+td.dataset.k, true); });
+    const nowTd = tb.querySelector('td.now');
+    if (nowTd) {
+      const wrap = tb.parentElement;
+      wrap.scrollLeft = Math.max(0, nowTd.offsetLeft - wrap.clientWidth / 2);
+    }
+
+    $('sheetAbout').innerHTML = `<h3>Thống kê tại điểm</h3><dl>
+      <dt>PM2.5 TB 4 năm</dt><dd>${f1(S.mean)} µg/m³</dd>
+      <dt>Số ngày > 50 µg/m³</dt><dd>${S.over} / ${S.n} ngày</dd>
+      <dt>Tỷ lệ trong AOA</dt><dd>${Math.round(S.aoa * 100)}%</dd>
+      <dt>${activeStationCode ? 'Trạm quan sát' : 'Trạm gần nhất'}</dt><dd>${activeStationCode ? STATIONS[activeStationCode].name + ' (tại trạm)' : near[0] + ' (' + near[1].toFixed(1).replace('.', ',') + ' km)'}</dd>
+      <dt>Giai đoạn</dt><dd>${fmtD(dayDate(0))} – ${fmtD(dayDate(N - 1))}</dd></dl>
+      <p style="font-size:9px;color:#64748b;margin-top:4px;line-height:1.25">
+        Mô hình CatBoost kết hợp AOD MAIAC/VIIRS và ERA5. Nhấp vào ngày trong bảng để xem chi tiết.
+      </p>`;
+
+    drawSpark(S);
+  }
+
+  const spark = $('spark');
+  function drawSpark(S) {
+    const r = spark.getBoundingClientRect(), w = r.width, h = r.height;
+    spark.width = w * dpr; spark.height = h * dpr;
+    const g = spark.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const L = 42, R = 8, T = 4, B = 10;
+    const ymax = Math.max(60, Math.ceil(Math.max(...Array.from(S.v).filter(x => x >= 0)) / 10) * 10);
+    const X = k => L + (w - L - R) * k / (N - 1);
+    const Y = v => T + (h - T - B) * (1 - v / ymax);
+
+    g.font = '8px "IBM Plex Mono", monospace';
+    g.fillStyle = '#64748b';
+    g.textBaseline = 'middle';
+
+    for (const [v, lab, col] of [[15, 'WHO 15', '#059669'], [50, 'QCVN 50', '#dc2626']]) {
+      if (v > ymax) continue;
+      g.strokeStyle = col; g.setLineDash([3, 2]);
+      g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(w - R, Y(v)); g.stroke();
+      g.setLineDash([]); g.fillStyle = col; g.fillText(lab, 2, Y(v));
+    }
+
+    for (let y = 0; y < N; y++) {
+      const d = dayDate(y);
+      if (d.getUTCMonth() === 0 && d.getUTCDate() === 1) {
+        g.fillText(d.getUTCFullYear(), X(y) + 2, h - 3);
+        g.fillRect(X(y), T, 1, h - T - B);
+      }
+    }
+
+    g.strokeStyle = '#1e293b'; g.lineWidth = 1;
+    g.beginPath();
+    let pen = false;
+    for (let k = 0; k < N; k++) {
+      const v = S.v[k];
+      if (!(v >= 0)) { pen = false; continue; }
+      const x = X(k), y = Y(v);
+      if (!pen) { g.moveTo(x, y); pen = true; } else g.lineTo(x, y);
+    }
+    g.stroke();
+
+    const x = X(day);
+    g.fillStyle = 'rgba(237, 85, 59, 0.25)';
+    g.fillRect(x - 3, T, 6, h - T - B);
+    g.fillStyle = '#ed553b';
+    g.fillRect(x - 1, T, 2, h - T - B);
+    const v = S.v[day];
+    if (v >= 0) {
+      g.fillStyle = css(v); g.strokeStyle = '#111a24';
+      g.beginPath(); g.arc(x, Y(v), 4.5, 0, 7); g.fill(); g.stroke();
+    }
+
+    spark.onclick = e => {
+      const rr = spark.getBoundingClientRect();
+      stop();
+      setDay(Math.round((e.clientX - rr.left - L) / (rr.width - L - R) * (N - 1)), true);
+    };
+  }
+
+  /* MODALS POPUPS */
+  function openModal(id) {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.hidden = true);
+    $(id).hidden = false;
+  }
+  function closeModal(id) { $(id).hidden = true; }
+
+  $('btnDashboard').onclick = () => openModal('modalDashboard');
+  $('btnValidation').onclick = () => openModal('modalValidation');
+  $('closeDashboard').onclick = () => closeModal('modalDashboard');
+  $('closeValidation').onclick = () => closeModal('modalValidation');
+
+  const SEASON_DATA = [
+    { m: 'Tháng 1', v: 28.58, color: '#f59e0b' },
+    { m: 'Tháng 2', v: 21.24, color: '#10b981' },
+    { m: 'Tháng 3', v: 25.94, color: '#f59e0b' },
+    { m: 'Tháng 4 (Đỉnh)', v: 37.47, color: '#ef4444' },
+    { m: 'Tháng 5', v: 22.89, color: '#10b981' },
+    { m: 'Tháng 6', v: 18.70, color: '#10b981' },
+    { m: 'Tháng 7', v: 17.01, color: '#10b981' },
+    { m: 'Tháng 8', v: 18.43, color: '#10b981' },
+    { m: 'Tháng 9', v: 16.93, color: '#10b981' },
+    { m: 'Tháng 10 (Đáy)', v: 15.97, color: '#38bdf8' },
+    { m: 'Tháng 11', v: 18.68, color: '#10b981' },
+    { m: 'Tháng 12', v: 21.36, color: '#10b981' }
+  ];
+  $('seasonBars').innerHTML = SEASON_DATA.map(d => `
+    <div class="bar-row">
+      <div style="white-space:nowrap">${d.m}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(d.v / 40 * 100)}%;background:${d.color}"></div></div>
+      <div style="font-family:var(--f-num);text-align:right;font-weight:600">${d.v.toFixed(1).replace('.', ',')}</div>
+    </div>
+  `).join('');
+
+  const FEAT_DATA = [
+    { name: 'CAMS PM2.5 (Vệ tinh)', pct: 18.63 },
+    { name: 'DOY cos (Chu kỳ năm)', pct: 14.74 },
+    { name: 'DOY sin (Chu kỳ năm)', pct: 12.52 },
+    { name: 'Độ ẩm tương đối RH (ERA5)', pct: 9.88 },
+    { name: 'Nhiệt độ mặt đất (ERA5)', pct: 9.70 },
+    { name: 'AOD 550nm hợp nhất', pct: 7.84 },
+    { name: 'Điểm cháy FIRMS 500km', pct: 7.03 },
+    { name: 'Vận tốc gió (ERA5)', pct: 6.40 },
+    { name: 'Chiều cao lớp biên BLH', pct: 6.26 },
+    { name: 'Nguồn cảm biến AOD', pct: 3.00 },
+    { name: 'Điểm cháy FIRMS 200km', pct: 1.67 },
+    { name: 'Lượng mưa CHIRPS', pct: 1.35 },
+    { name: 'Điểm cháy FIRMS 100km', pct: 0.98 }
+  ];
+  $('featBars').innerHTML = FEAT_DATA.map(d => `
+    <div class="bar-row" style="grid-template-columns:180px 1fr 60px">
+      <div style="white-space:nowrap">${d.name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(d.pct / 20 * 100)}%"></div></div>
+      <div style="font-family:var(--f-num);text-align:right;font-weight:600">${d.pct.toFixed(1).replace('.', ',')}%</div>
+    </div>
+  `).join('');
+
+
+
+  /* KEYBOARD SHORTCUTS */
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault();
+      timer ? stop() : play();
+    }
+    if (e.key === 'Escape') {
+      closeSheet();
+      document.querySelectorAll('.modal-overlay').forEach(m => m.hidden = true);
+    }
+    if (e.key === 'ArrowRight') { e.preventDefault(); setDay(day + 1, true); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); setDay(day - 1, true); }
+    if (e.key === '+' || e.key === '=') { e.preventDefault(); map.zoomIn(); }
+    if (e.key === '-' || e.key === '_') { e.preventDefault(); map.zoomOut(); }
+  });
+
+  /* STARTUP */
+  setDay(1196, true); // Start at peak day (11/04/2026: 57.4 ug/m3)
+  $('loading').hidden = true;
+  toggleWind();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const stParam = urlParams.get('station');
+  if (stParam && STATIONS[stParam.toUpperCase()]) {
+    zoomToStation(stParam.toUpperCase());
+
+    if (urlParams.get('collapsed') === '1') {
+      toggleSheetCollapse();
+    }
+  } else {
+    const latParam = parseFloat(urlParams.get('lat'));
+    const lonParam = parseFloat(urlParams.get('lon'));
+    if (!isNaN(latParam) && !isNaN(lonParam)) {
+      map.setView([latParam, lonParam], 13);
+      const i = Math.floor((Y0 - latParam) / DX), j = Math.floor((lonParam - X0) / DX);
+      const c = cellOf[i * W + j];
+      if (c >= 0 && (!M.in_shp || M.in_shp[c])) {
+        sel = c;
+        selCircle.setLatLng([latParam, lonParam]).addTo(map);
+        openSheet();
+        if (urlParams.get('collapsed') === '1') toggleSheetCollapse();
+      }
+    }
+  }
+})();
+</script>
+</body>
+</html>
