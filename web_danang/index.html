@@ -983,6 +983,10 @@
           <option value="googleRoad">Đường phố</option>
           <option value="googleHybrid" selected>Vệ tinh</option>
         </select>
+        <div class="layer-item-check active" id="layGrid" style="padding:6px 0 0 0;margin-top:6px;border-top:1px solid rgba(255,255,255,0.08)" title="Bật/tắt hiển thị ô lưới 1 km (đường kẻ xám 1px)">
+          <span><span class="icon">▦</span> Ô lưới 1 km</span>
+          <input type="checkbox" id="chkGrid" checked style="accent-color:var(--brand-red)">
+        </div>
       </div>
 
       <!-- OPACITY SLIDER -->
@@ -1580,6 +1584,143 @@
     $('lblOpacity').textContent = e.target.value + '%';
     pmOverlay.setOpacity(curOpacity);
   };
+
+  /* DYNAMIC 1 KM CRISP GRID LINES LAYER (VARIANT A: CLIPPED TO PROVINCE BOUNDARY) */
+  const GridLinesLayer = L.Layer.extend({
+    options: {
+      color: 'rgba(100, 116, 139, 0.75)',
+      variant: 'clipped'
+    },
+    initialize: function(options) {
+      L.setOptions(this, options);
+    },
+    onAdd: function(map) {
+      this._map = map;
+      this._canvas = L.DomUtil.create('canvas', 'leaflet-dynamic-grid');
+      this._canvas.style.pointerEvents = 'none';
+      this._canvas.style.zIndex = '100';
+      map.getPanes().overlayPane.appendChild(this._canvas);
+      this._ctx = this._canvas.getContext('2d');
+
+      this._onMove = () => this._redraw();
+      map.on('move', this._onMove);
+      map.on('zoom', this._onMove);
+      map.on('viewreset', this._onMove);
+      map.on('resize', this._onMove);
+      this._redraw();
+    },
+    onRemove: function(map) {
+      map.off('move', this._onMove);
+      map.off('zoom', this._onMove);
+      map.off('viewreset', this._onMove);
+      map.off('resize', this._onMove);
+      if (this._canvas && this._canvas.parentElement) {
+        this._canvas.parentElement.removeChild(this._canvas);
+      }
+    },
+    setVariant: function(variant) {
+      this.options.variant = variant;
+      this._redraw();
+    },
+    _redraw: function() {
+      if (!this._map) return;
+      const map = this._map;
+      const size = map.getSize();
+      const dpr = window.devicePixelRatio || 1;
+
+      const topLeft = map.containerPointToLayerPoint([0, 0]);
+      L.DomUtil.setPosition(this._canvas, topLeft);
+
+      if (this._canvas.width !== size.x * dpr || this._canvas.height !== size.y * dpr) {
+        this._canvas.width = size.x * dpr;
+        this._canvas.height = size.y * dpr;
+        this._canvas.style.width = size.x + 'px';
+        this._canvas.style.height = size.y + 'px';
+      }
+
+      const ctx = this._ctx;
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size.x, size.y);
+
+      const bounds = map.getBounds();
+      const LAT_SOUTH = Y0 - H * DX; // 14.95
+      const LAT_NORTH = Y0;          // 16.25
+      const LON_WEST = X0;           // 107.20
+      const LON_EAST = X0 + W * DX;  // 108.76
+
+      if (bounds.getWest() > LON_EAST || bounds.getEast() < LON_WEST ||
+          bounds.getSouth() > LAT_NORTH || bounds.getNorth() < LAT_SOUTH) {
+        ctx.restore();
+        return;
+      }
+
+      if (this.options.variant === 'clipped' && daNangGeoJson) {
+        const p = new Path2D();
+        const geom = daNangGeoJson.features[0].geometry;
+        const coords = geom.type === 'MultiPolygon' ? geom.coordinates : [geom.coordinates];
+        for (const poly of coords) {
+          for (const ring of poly) {
+            for (let i = 0; i < ring.length; i++) {
+              const pt = map.latLngToContainerPoint([ring[i][1], ring[i][0]]);
+              if (i === 0) p.moveTo(pt.x, pt.y);
+              else p.lineTo(pt.x, pt.y);
+            }
+            p.closePath();
+          }
+        }
+        ctx.clip(p, 'evenodd');
+      }
+
+      ctx.strokeStyle = this.options.color;
+      ctx.lineWidth = 1;
+
+      const minLon = Math.max(LON_WEST, bounds.getWest());
+      const maxLon = Math.min(LON_EAST, bounds.getEast());
+      const minLat = Math.max(LAT_SOUTH, bounds.getSouth());
+      const maxLat = Math.min(LAT_NORTH, bounds.getNorth());
+
+      const startCol = Math.max(0, Math.floor((minLon - X0) / DX));
+      const endCol = Math.min(W, Math.ceil((maxLon - X0) / DX));
+      const startRow = Math.max(0, Math.floor((Y0 - maxLat) / DX));
+      const endRow = Math.min(H, Math.ceil((Y0 - minLat) / DX));
+
+      ctx.beginPath();
+      for (let c = startCol; c <= endCol; c++) {
+        const lon = X0 + c * DX;
+        const ptTop = map.latLngToContainerPoint([LAT_NORTH, lon]);
+        const ptBottom = map.latLngToContainerPoint([LAT_SOUTH, lon]);
+        const x = Math.round(ptTop.x) + 0.5;
+        ctx.moveTo(x, ptTop.y);
+        ctx.lineTo(x, ptBottom.y);
+      }
+
+      for (let r = startRow; r <= endRow; r++) {
+        const lat = Y0 - r * DX;
+        const ptLeft = map.latLngToContainerPoint([lat, LON_WEST]);
+        const ptRight = map.latLngToContainerPoint([lat, LON_EAST]);
+        const y = Math.round(ptLeft.y) + 0.5;
+        ctx.moveTo(ptLeft.x, y);
+        ctx.lineTo(ptRight.x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  });
+
+  const gridLinesLayer = new GridLinesLayer({ variant: 'clipped', color: 'rgba(100, 116, 139, 0.75)' }).addTo(map);
+
+  const chkGrid = $('chkGrid');
+  if (chkGrid) {
+    chkGrid.onchange = e => {
+      $('layGrid').classList.toggle('active', e.target.checked);
+      if (e.target.checked) {
+        if (!map.hasLayer(gridLinesLayer)) gridLinesLayer.addTo(map);
+      } else {
+        if (map.hasLayer(gridLinesLayer)) map.removeLayer(gridLinesLayer);
+      }
+    };
+  }
 
   /* RENDER VECTOR BOUNDARY FROM SHAPEFILE */
   if (daNangGeoJson) {
