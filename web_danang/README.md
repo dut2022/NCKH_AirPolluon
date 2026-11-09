@@ -1,4 +1,4 @@
-# High-Resolution PM2.5 Web GIS Platform for Da Nang Province (Unified)
+# High-Resolution PM2.5 Web GIS Platform for Da Nang City (Unified)
 
 Scientific Research Project: **NCKH T2026-02-DA2894.18**  
 Last Updated: November 2026  
@@ -8,7 +8,7 @@ Last Updated: November 2026
 ## 1. Purpose & Scope
 
 ### 1.1 Purpose
-This interactive web GIS platform visualizes high-resolution daily ground-level particulate matter ($\text{PM}_{2.5}$) concentrations at a **1 km grid resolution** across the entire unified territory of **Da Nang Province** from **January 1, 2023 to September 15, 2026 (1,354 continuous days)**.
+This interactive web GIS platform visualizes high-resolution daily ground-level particulate matter ($\text{PM}_{2.5}$) concentrations at a **1 km grid resolution** across the entire unified territory of **Da Nang City** from **January 1, 2023 to September 15, 2026 (1,354 continuous days)**.
 
 The interface combines:
 - Official brand identity icon mark (`logo.jpg` from `Logo/05_Original_Icon_Mark_1024x1024.jpg`) integrated into header badge, browser favicon, modal heads, and loading screen.
@@ -19,7 +19,7 @@ The interface combines:
 - **Ultra-Fast Instant Loading Engine (<150ms)**: Native binary ArrayBuffers (`.bin`) and multi-threaded Python server (`ThreadingHTTPServer` + dual-stack IPv4/IPv6 support), eliminating previous socket stalls and Base64 CPU decoding overhead.
 
 ### 1.2 Scope & Spatial Unification
-- **Geographical Domain**: Unified territory of Da Nang Province strictly clipped according to the official administrative boundary shapefile (`Đà Nẵng (tỉnh thành) - 34.shp`).
+- **Geographical Domain**: Unified territory of Da Nang City strictly clipped according to the official administrative boundary shapefile (`Đà Nẵng (tỉnh thành) - 34.shp`).
 - **Monitoring Stations (Official Exact Coordinates)**:
   - **Station NGLB (Đại học Sư Phạm)**: $16.061634^\circ\text{N}, 108.160351^\circ\text{E}$ (459 Ton Duc Thang, Lien Chieu, Da Nang).
   - **Station TAKY (Tam Kỳ)**: $15.5621^\circ\text{N}, 108.4867^\circ\text{E}$ (Tam Ky, Da Nang).
@@ -87,7 +87,7 @@ python chay_web.py
 |---|---|---|
 | **Focus Station NGLB** | Header button `📍 Trạm NGLB (Sư Phạm)` | — |
 | **Focus Station TAKY** | Header button `📍 Trạm TAKY (Tam Kỳ)` | — |
-| **View Whole Province** | Header button `🌐 Toàn tỉnh` | — |
+| **View Whole Province** | Header button `🌐 Toàn thành phố` | — |
 | **Search Location** | Top-left search input pill (4,750+ Da Nang locations & OSM street geocoding) | — |
 | **Switch Active Variable** | Layer Dock radio list (`PM2.5`, `Nhiệt độ`, `Độ ẩm`, `Gió`, `Mưa`, `BLH`) | — |
 | **Date Selection** | Bottom timeline date input (`min="2023-01-01" max="2026-09-15"`) | Out-of-range Warning Toast |
