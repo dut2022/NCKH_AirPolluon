@@ -2,11 +2,14 @@
 <html lang="vi"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Bản đồ Bụi Mịn PM2.5 Thành phố Đà Nẵng (Lưới 1 km)</title>
+  <title>Bụi Mịn TP. Đà Nẵng</title>
   <meta name="description" content="Hệ thống trực quan hóa chất lượng không khí PM2.5 độ phân giải cao 1 km trên nền bản đồ Google Maps, bao phủ toàn bộ Thành phố Đà Nẵng (hợp nhất).">
   
-  <link rel="icon" type="image/png" href="logo.png">
-  <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
   
   <!-- Leaflet GIS Engine -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -1184,7 +1187,7 @@
   <!-- TOP-CENTER: BRAND BADGE (FLOATING LOGO) -->
   <div id="topLogoCenter">
     <a href="#" class="windy-logo-center" id="btnLogo" title="Đặt lại góc nhìn toàn Thành phố Đà Nẵng">
-      <img src="logo.png" alt="AIR-URBAN LAB" class="logo-badge-center">
+      <img src="logo_icon.png" alt="Bụi Mịn TP. Đà Nẵng" class="logo-badge-center">
     </a>
   </div>
 
@@ -1407,7 +1410,7 @@
     <div class="modal-card">
       <button class="modal-close" id="closeDashboard">×</button>
       <div class="modal-head" style="display:flex;align-items:center;gap:14px">
-        <img src="logo_icon_ellipse.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
+        <img src="logo_icon.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
         <div>
           <h2>Phân Tích Chất Lượng Không Khí Bụi Mịn PM<sub>2.5</sub> Thành phố Đà Nẵng</h2>
           <p>Phân tích tổng hợp toàn bộ 9.861 ô lưới 1 km trên địa bàn Thành phố Đà Nẵng (hợp nhất toàn vùng) suốt 1.354 ngày từ 2023 đến 2026.</p>
@@ -1522,7 +1525,7 @@
     <div class="modal-card">
       <button class="modal-close" id="closeValidation">×</button>
       <div class="modal-head" style="display:flex;align-items:center;gap:14px">
-        <img src="logo_icon_ellipse.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
+        <img src="logo_icon.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
         <div>
           <h2>Kết Quả Kiểm Định Mô Hình AI So Với CAMS &amp; 2 Trạm Quan Trắc</h2>
           <p>Đánh giá khách quan 5 mô hình Machine Learning qua 4 phương pháp kiểm định không gian - thời gian Meyer tại 2 trạm NGLB (Sư Phạm) và TAKY (Tam Kỳ).</p>
@@ -1689,7 +1692,7 @@
   <!-- LOADING SPINNER -->
   <div id="loading" hidden="">
     <div style="text-align:center;max-width:360px;padding:24px">
-      <img src="logo.png" alt="Logo" style="height:62px;width:auto;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.85)) drop-shadow(0 0 2px rgba(255,255,255,0.45));margin-bottom:16px;display:inline-block">
+      <img src="logo_icon.png" alt="Logo" style="height:62px;width:auto;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.85)) drop-shadow(0 0 2px rgba(255,255,255,0.45));margin-bottom:16px;display:inline-block">
       <div class="spinner"></div>
       <b style="font-size:15px;color:#fff;display:block;margin-top:6px">Đang Tải Bản Đồ PM2.5 Đà Nẵng</b>
       <div style="font-size:12px;color:var(--mute);margin-top:8px" id="prog">Khởi tạo không gian bản đồ và lưới 1 km...</div>
@@ -2341,20 +2344,26 @@
 
   /* TOP STATION BUTTON ACTIONS (100% EXACT STATION COORDINATES) */
   function zoomToStation(code) {
+    selectStation(code, true);
+  }
+
+  function selectStation(code, zoom = false) {
     const st = STATIONS[code];
     if (!st) return;
     activeStationCode = code;
-    map.flyTo([st.lat, st.lon], 15, { duration: 1.2 });
-    document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
-    if (code === 'NGLB') $('btnStationNGLB').classList.add('active');
-    if (code === 'TAKY') $('btnStationTAKY').classList.add('active');
+    if (zoom) {
+      map.flyTo([st.lat, st.lon], 15, { duration: 1.2 });
+      document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+      if (code === 'NGLB') $('btnStationNGLB').classList.add('active');
+      if (code === 'TAKY') $('btnStationTAKY').classList.add('active');
+    }
 
     // Pick raster cell for PM2.5 time-series data
     const i = Math.floor((Y0 - st.lat) / DX), j = Math.floor((st.lon - X0) / DX);
     const c = cellOf[i * W + j];
     if (c >= 0 && (!M.in_shp || M.in_shp[c])) {
       sel = c;
-      // 100% EXACT STATION COORDINATE HIGHLIGHT (CONCENTRIC WITH RED STATION MARKER)
+      // 100% EXACT STATION COORDINATE HIGHLIGHT
       selCircle.setLatLng([st.lat, st.lon]).addTo(map);
       openSheet();
     }
@@ -3159,6 +3168,13 @@
         openSheet();
         if (urlParams.get('collapsed') === '1') toggleSheetCollapse();
       }
+    } else {
+      // DEFAULT STARTUP (ctrl+F5 or direct visit):
+      // Pre-select Trạm Sư Phạm (NGLB) to show the bottom sheet immediately,
+      // while keeping the whole Da Nang city view!
+      selectStation('NGLB', false);
+      document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+      $('btnAllProvince').classList.add('active');
     }
   }
 })();
