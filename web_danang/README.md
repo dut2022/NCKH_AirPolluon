@@ -98,6 +98,7 @@ python chay_web.py
 | **Adjust Layer Opacity** | Layer Dock slider `Độ mờ lớp phủ` | — |
 | **Toggle Wind Particles** | Layer Dock checkbox `Hạt gió (ERA5)` | — |
 | **Toggle AOA Mask** | Layer Dock checkbox `Mặt nạ AOA` (Area of Applicability) | — |
+| **Layer Methodology Info** | Circular i button (.layer-info-btn) on the left of each layer row (PM2.5, Gió, Vùng tin cậy) | Opens centered #modalLayerInfo dialog |
 | **Inspect Grid Cell** | Click any location on the map | — |
 | **Zoom In / Out** | Zoom buttons `+` / `-` directly beneath Layer Dock (right side) | `+` / `-` or Scroll |
 | **Resize Detail Drawer** | Drag top handle bar up/down (`↕ Kéo chỉnh độ cao`) | Drag / Touch |

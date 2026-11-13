@@ -1,5 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi"><head>
+<html lang="vi" data-theme="light"><head>
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('dn_pm25_theme');
+        if (t === 'dark' || t === 'light') {
+          document.documentElement.setAttribute('data-theme', t);
+        }
+      } catch (_) {}
+    })();
+  </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Bụi Mịn TP. Đà Nẵng</title>
@@ -15,77 +25,136 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Typography: Windy Native Sans-Serif + Monospace -->
+  <!-- Typography: Inter Sans-Serif -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link id="font-inter" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 
   <style>
-    :root {
+    :root, html[data-theme="dark"] {
       color-scheme: dark;
-      --brand-navy: #0c254b;
-      --brand-navy-dark: #08162e;
+      --surface: rgba(17, 24, 33, 0.93);
+      --surface-solid: #111821;
+      --surface-elevated: #161f2b;
+      --surface-hover: rgba(30, 40, 52, 0.96);
+      --line: rgba(255, 255, 255, 0.11);
+      --line-subtle: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.11);
+      --windy-bg: #0b1118;
       --brand-primary: #0284c7;
       --brand-primary-hover: #0ea5e9;
-      --brand-cyan: #38bdf8;
       --windy-red: #0284c7;
       --windy-red-hover: #0ea5e9;
-      --windy-bg: #071322;
-      --glass-panel: rgba(11, 27, 51, 0.88);
-      --glass-border: rgba(56, 189, 248, 0.16);
-      --ink: #f8fafc;
-      --mute: #94a3b8;
+      --ink: #e5e9ef;
+      --ink-strong: #f8fafc;
+      --mute: #8b97a6;
       --accent: #38bdf8;
       --good: #10b981;
       --bad: #ef4444;
+      --active-btn-bg: #111821;
+      --active-btn-border: #38bdf8;
+      --active-btn-ink: #f8fafc;
+      --timeline-bg: rgba(17, 24, 33, 0.94);
+      --rail-bg: #263140;
+      --tick-mark: #3b4a5c;
+      --spark-bg: #0d131b;
+      --table-cell-ink: #cbd5e1;
+      --table-hover: rgba(255, 255, 255, 0.04);
+      --table-border: rgba(255, 255, 255, 0.05);
+      --row-now: rgba(56, 189, 248, 0.12);
+      --modal-backdrop: rgba(11, 17, 24, 0.86);
+      --bar-track: rgba(255, 255, 255, 0.07);
+      --card-panel-bg: rgba(255, 255, 255, 0.03);
+      --thead-bg: rgba(255, 255, 255, 0.05);
+      --row-hl-1: rgba(2, 132, 199, 0.15);
+      --row-hl-2: rgba(2, 132, 199, 0.10);
+      --hover-border: rgba(255, 255, 255, 0.22);
+      --aoa-out-col: #f87171;
+      --rain-col: #60a5fa;
+      --muted-cell: #475569;
+      --arrow-col: #cbd5e1;
+      --resizer-pill: #475569;
       --f-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --f-num: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --blue-badge: #0284c7;
-      --blue-badge-glow: rgba(14, 165, 233, 0.45);
-      --pill-border-active: rgba(14, 165, 233, 0.5);
-      --pill-bg-active: rgba(12, 37, 75, 0.85);
-      --shadow-windy: 0 4px 18px rgba(0, 0, 0, 0.45);
+      --shadow-windy: 0 2px 8px rgba(0, 0, 0, 0.35);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--f-ui) !important;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--f-ui) !important;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: var(--f-ui) !important;
+    html[data-theme="light"] {
+      color-scheme: light;
+      --surface: rgba(255, 255, 255, 0.95);
+      --surface-solid: #ffffff;
+      --surface-elevated: #f8fafc;
+      --surface-hover: #f1f5f9;
+      --line: #cbd5e1;
+      --line-subtle: #e2e8f0;
+      --glass-border: #cbd5e1;
+      --windy-bg: #f1f5f9;
+      --brand-primary: #0284c7;
+      --brand-primary-hover: #0369a1;
+      --windy-red: #0284c7;
+      --windy-red-hover: #0369a1;
+      --ink: #1e293b;
+      --ink-strong: #0f172a;
+      --mute: #64748b;
+      --accent: #0284c7;
+      --good: #059669;
+      --bad: #dc2626;
+      --active-btn-bg: #0284c7;
+      --active-btn-border: #0284c7;
+      --active-btn-ink: #ffffff;
+      --timeline-bg: rgba(255, 255, 255, 0.96);
+      --rail-bg: #e2e8f0;
+      --tick-mark: #cbd5e1;
+      --spark-bg: #f8fafc;
+      --table-cell-ink: #334155;
+      --table-hover: #f8fafc;
+      --table-border: #f1f5f9;
+      --row-now: rgba(2, 132, 199, 0.09);
+      --modal-backdrop: rgba(15, 23, 42, 0.45);
+      --bar-track: #e2e8f0;
+      --card-panel-bg: #f8fafc;
+      --thead-bg: #f1f5f9;
+      --row-hl-1: rgba(2, 132, 199, 0.10);
+      --row-hl-2: rgba(2, 132, 199, 0.05);
+      --hover-border: #94a3b8;
+      --aoa-out-col: #dc2626;
+      --rain-col: #2563eb;
+      --muted-cell: #94a3b8;
+      --arrow-col: #334155;
+      --resizer-pill: #cbd5e1;
+      --shadow-windy: 0 2px 8px rgba(15, 23, 42, 0.12);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; width: 100%; overflow: hidden; background: var(--windy-bg); color: var(--ink); font-family: var(--f-ui); }
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: var(--windy-bg);
+      color: var(--ink);
+      font-family: var(--f-ui);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    button, input, select, textarea { font-family: inherit; }
+    .live-val, .tip-pm, table.mg td, #sheetAbout dd, .kpi-box .val, #legticks, .coord {
+      font-variant-numeric: tabular-nums;
+    }
     [hidden] { display: none !important; }
 
     #app { position: fixed; inset: 0; display: flex; flex-direction: column; }
-    #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; background: #0f141c; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; background: var(--windy-bg); }
     #wind { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 400; pointer-events: none; }
 
-    /* WINDY GLASS PANELS */
+    /* FLAT DARK PANELS */
     .glass {
-      background: var(--glass-panel);
-      border: 1px solid var(--glass-border);
-      border-radius: 10px;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
       box-shadow: var(--shadow-windy);
     }
 
-    /* TOP-LEFT SEARCH BAR & STATION SHORTCUTS (WINDY STYLE) */
+    /* TOP-LEFT SEARCH BAR & STATION SHORTCUTS */
     #topNavLeft {
       position: absolute;
       top: max(12px, env(safe-area-inset-top, 12px));
@@ -94,36 +163,34 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 7px;
+      gap: 6px;
     }
 
-    /* SEARCH INPUT PILL */
     .search-box {
       position: relative;
       display: flex;
       align-items: center;
     }
     .search-input {
-      background: rgba(22, 27, 34, 0.92);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 8px 16px 8px 34px;
-      font-family: var(--f-ui);
-      font-size: 13px;
-      color: #fff;
-      width: 200px;
-      transition: all 0.25s ease;
-      box-shadow: var(--shadow-windy);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 12px 6px 32px;
+      font-size: 12.5px;
+      color: var(--ink-strong);
+      width: 220px;
+      transition: border-color 0.15s, width 0.2s;
     }
+    .search-input::placeholder { color: var(--mute); }
     .search-input:focus {
       outline: none;
-      width: 240px;
-      background: rgba(26, 32, 42, 0.98);
-      border-color: var(--windy-red);
+      width: 260px;
+      background: var(--surface-solid);
+      border-color: var(--accent);
     }
     .search-icon {
       position: absolute;
-      left: 12px;
+      left: 10px;
       color: var(--mute);
       pointer-events: none;
     }
@@ -133,77 +200,80 @@
       left: 0;
       min-width: 320px;
       max-width: 420px;
-      background: rgba(22, 27, 34, 0.98);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
+      background: var(--surface-solid);
+      border: 1px solid var(--line);
+      border-radius: 8px;
       max-height: 320px;
       overflow-y: auto;
-      box-shadow: var(--shadow-windy);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
       display: none;
       z-index: 1100;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
     }
     .search-item {
-      padding: 8px 14px;
+      padding: 8px 12px;
       font-size: 12.5px;
       cursor: pointer;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--line-subtle);
     }
-    .search-item:hover { background: rgba(2, 132, 199, 0.18); }
-    .search-item .coord { font-family: var(--f-num); font-size: 11px; color: var(--mute); margin-left: 6px; }
+    .search-item:hover { background: var(--surface-hover); }
+    .search-item .coord { font-size: 11px; color: var(--mute); margin-left: 6px; }
 
-    /* STATION SHORTCUT BUTTONS (GROUPED WITH SEARCH) */
+    /* STATION SHORTCUT BUTTONS */
     #topStations {
       display: flex;
       align-items: center;
-      gap: 5px;
-      background: rgba(22, 27, 34, 0.92);
-      padding: 3px 4px;
-      border-radius: 24px;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--shadow-windy);
+      gap: 6px;
     }
     .station-btn {
-      background: transparent;
-      border: none;
+      background: var(--surface);
+      border: 1px solid var(--line);
       color: var(--mute);
-      font-family: var(--f-ui);
       font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 20px;
+      font-weight: 500;
+      padding: 6px 11px;
+      border-radius: 6px;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 5px;
-      transition: all 0.15s ease;
+      gap: 6px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
       white-space: nowrap;
     }
-    .station-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-    .station-btn.active {
-      background: var(--windy-red);
-      color: #fff;
-      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+    .station-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--hover-border);
+      color: var(--ink-strong);
     }
-    .station-btn .pin { font-size: 13px; }
+    .station-btn.active {
+      background: var(--active-btn-bg);
+      border-color: var(--active-btn-border);
+      color: var(--active-btn-ink);
+    }
+    .station-btn .svg-station-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
     .station-btn .short-label { display: none; }
     .station-btn .full-label { display: inline; }
 
     @media (max-width: 1260px) {
       .station-btn .full-label { display: none; }
       .station-btn .short-label { display: inline; }
-      .search-input { width: 160px; }
-      .search-input:focus { width: 200px; }
+      .search-input { width: 170px; }
+      .search-input:focus { width: 210px; }
     }
     @media (max-width: 960px) {
       #topStations { display: none; }
     }
 
-    /* TOP-CENTER BRAND (EXACT WINDY STYLE: NO BACKGROUND, FLOATING DIRECTLY WITH DROP-SHADOW) */
+    /* TOP-CENTER BRAND */
     #topLogoCenter {
       position: absolute;
-      top: max(14px, env(safe-area-inset-top, 14px));
+      top: max(10px, env(safe-area-inset-top, 10px));
       left: 50%;
       transform: translateX(-50%);
       z-index: 1000;
@@ -212,56 +282,17 @@
     .windy-logo-center {
       display: flex;
       align-items: center;
-      gap: 12px;
       padding: 2px 6px;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      color: #fff;
       text-decoration: none;
       cursor: pointer;
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .windy-logo-center:hover {
-      transform: scale(1.05);
     }
     .logo-badge-center {
-      height: 44px;
+      height: 40px;
       width: auto;
-      max-width: 290px;
+      max-width: 260px;
       object-fit: contain;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
       display: block;
-      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.85));
-    }
-    .logo-title-center {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-      display: flex;
-      align-items: baseline;
-      gap: 7px;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.92), 0 1px 3px rgba(0, 0, 0, 0.98);
-    }
-    .logo-title-center b {
-      color: #ffffff;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-    }
-    .logo-title-center sub {
-      font-size: 0.68em;
-      font-weight: 700;
-      color: var(--windy-red);
-    }
-    .logo-title-center span {
-      color: #ffffff;
-      font-weight: 600;
-      font-size: 18px;
-      letter-spacing: -0.01em;
-      opacity: 0.95;
+      filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
     }
 
     /* TOP-RIGHT ACTIONS & NAV */
@@ -272,68 +303,74 @@
       z-index: 1000;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .nav-pill {
-      background: rgba(22, 27, 34, 0.92);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 6px 13px;
-      color: #fff;
-      font-size: 12.5px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 11px;
+      color: var(--mute);
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.15s;
-      box-shadow: var(--shadow-windy);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
       white-space: nowrap;
     }
-    .nav-pill:hover { background: rgba(35, 42, 54, 0.95); border-color: var(--windy-red); }
-    .nav-pill.active { background: var(--windy-red); border-color: var(--windy-red); }
+    .nav-pill:hover {
+      background: var(--surface-hover);
+      border-color: var(--hover-border);
+      color: var(--ink-strong);
+    }
+    .nav-pill.active {
+      background: var(--active-btn-bg);
+      border-color: var(--active-btn-border);
+      color: var(--active-btn-ink);
+    }
 
-    /* LIVE STATUS PILL */
+    /* DAILY SUMMARY STATUS BOX */
     #livePill {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(22, 27, 34, 0.92);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 6px 12px;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 10px;
       font-size: 12px;
-      box-shadow: var(--shadow-windy);
+      color: var(--mute);
     }
     .live-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--good);
-      animation: pulse-dot 2s infinite;
+      flex-shrink: 0;
     }
-    @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.85); } }
-    .live-val { font-family: var(--f-num); font-weight: 600; color: var(--accent); }
-    .aqi-badge { padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase; }
+    .live-val { font-weight: 600; color: var(--ink-strong); }
+    .aqi-badge { padding: 1px 6px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase; }
 
-    /* WINDY RIGHT DOCK GROUP (LAYER DOCK & ZOOM CONTROLS) */
+    /* RIGHT DOCK GROUP */
     #rightDockGroup {
       position: absolute;
-      top: calc(64px + env(safe-area-inset-top, 0px));
+      top: calc(56px + env(safe-area-inset-top, 0px));
       right: max(14px, env(safe-area-inset-right, 14px));
       z-index: 1000;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 10px;
+      gap: 8px;
       pointer-events: none;
     }
     #layerDock {
-      width: 190px;
+      width: 214px;
       padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       pointer-events: auto;
     }
     #zoomControls {
@@ -341,132 +378,212 @@
       flex-direction: column;
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: var(--shadow-windy);
-      border: 1px solid var(--glass-border);
-      background: var(--glass-panel);
-      width: 36px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      width: 34px;
       pointer-events: auto;
     }
     .zoom-btn {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       background: transparent;
       border: none;
-      color: #ffffff;
+      color: var(--ink);
       display: grid;
       place-items: center;
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
-    .zoom-btn:hover {
-      background: rgba(35, 42, 54, 0.95);
-      color: var(--windy-red);
-    }
-    .zoom-btn:active {
-      background: rgba(2, 132, 199, 0.25);
-    }
-    .zoom-divider {
-      height: 1px;
-      background: var(--glass-border);
-      width: 100%;
-    }
+    .zoom-btn:hover { background: var(--surface-hover); color: var(--ink-strong); }
+    .zoom-btn:active { background: rgba(2, 132, 199, 0.2); }
+    .zoom-divider { height: 1px; background: var(--line); width: 100%; }
+
     .sel-diem-marker {
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65));
       pointer-events: none;
     }
     .dock-title {
       font-size: 10.5px;
-      font-weight: 700;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       color: var(--mute);
-      padding: 4px 6px 2px;
-    }
-    .var-list {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .layer-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 8px;
-      border-radius: 6px;
-      color: #cbd5e1;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      user-select: none;
-      border: 1px solid transparent;
-    }
-    .layer-item:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-    }
-    .layer-item.active {
-      background: rgba(2, 132, 199, 0.22);
-      border-color: rgba(2, 132, 199, 0.45);
-      color: #38bdf8;
-      font-weight: 600;
-    }
-    .layer-item .icon { font-size: 13.5px; margin-right: 6px; }
-    .var-unit {
-      font-family: var(--f-num);
-      font-size: 10.5px;
-      opacity: 0.7;
-    }
-    .layer-item.active .var-unit {
-      opacity: 0.95;
-      font-weight: 600;
-      color: #fff;
+      padding: 4px 4px 3px;
     }
     .layer-item-check {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 8px;
-      border-radius: 6px;
-      color: #cbd5e1;
-      font-size: 12px;
+      padding: 5px 4px;
+      border-radius: 4px;
+      color: var(--mute);
+      font-size: 12.5px;
       font-weight: 500;
       cursor: pointer;
       user-select: none;
+      transition: background 0.15s, color 0.15s;
     }
-    .layer-item-check:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
-    .layer-item-check .icon { font-size: 13.5px; margin-right: 6px; }
+    .layer-item-check * { pointer-events: none; }
+    .layer-item-check:hover { background: var(--surface-hover); color: var(--ink); }
+    .layer-item-check.active { color: var(--ink-strong); }
+    .layer-item-check .layer-info-btn {
+      pointer-events: auto;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      background: transparent;
+      color: var(--mute);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 6px;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 11px;
+      font-weight: 700;
+      font-style: italic;
+      line-height: 1;
+      transition: all 0.15s ease;
+    }
+    .layer-item-check .layer-info-btn:hover {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+    }
+    .info-tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .info-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface-elevated);
+      color: var(--mute);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .info-tab-btn:hover {
+      color: var(--ink-strong);
+      border-color: var(--hover-border);
+    }
+    .info-tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+    .info-section-card {
+      background: var(--card-panel-bg);
+      border: 1px solid var(--line-subtle);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .info-section-card h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-strong);
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .info-section-card p, .info-section-card li {
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--ink);
+      margin: 0 0 6px 0;
+    }
+    .info-section-card ul {
+      margin: 4px 0 4px 18px;
+      padding: 0;
+    }
+    .info-formula-box {
+      background: var(--surface-elevated);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 8px 0;
+      font-family: var(--f-num);
+      font-size: 12px;
+      color: var(--ink-strong);
+      overflow-x: auto;
+    }
+    .layer-item-check .pill-badge {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 6px;
+      flex-shrink: 0;
+      color: var(--mute);
+    }
+    .layer-item-check.active .pill-badge { color: var(--accent); }
+    .layer-item-check .pill-label { flex: 1; white-space: nowrap; }
+    .layer-item-check .pill-check {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+    .layer-item-check .pill-check { color: var(--accent); }
+    .layer-item-check.active .pill-check { opacity: 1; }
+    .layer-item-check input[type="checkbox"] { display: none; }
 
-    /* BASEMAP SELECTOR POPUP */
+    /* BASEMAP SELECTOR */
     .basemap-box {
       margin-top: 4px;
       padding-top: 6px;
-      border-top: 1px solid var(--glass-border);
+      border-top: 1px solid var(--line-subtle);
     }
     .basemap-select {
       width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--glass-border);
-      color: #fff;
-      font-size: 11.5px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 12px;
       padding: 5px 8px;
       border-radius: 6px;
       cursor: pointer;
       margin-top: 4px;
+      margin-bottom: 4px;
     }
 
     /* OPACITY SLIDER */
     .slider-row {
-      padding: 6px 8px;
+      padding: 6px 4px 2px;
+      border-top: 1px solid var(--line-subtle);
+      margin-top: 2px;
       display: flex;
       flex-direction: column;
       gap: 4px;
       font-size: 11px;
       color: var(--mute);
     }
+    .slider-row b { color: var(--ink); font-weight: 600; }
     .slider-row input[type=range] {
       width: 100%;
-      accent-color: var(--windy-red);
+      accent-color: var(--brand-primary);
       cursor: pointer;
     }
 
@@ -475,23 +592,22 @@
       position: fixed;
       top: 60px;
       left: 50%;
-      transform: translateX(-50%) translateY(-25px);
-      background: rgba(20, 24, 33, 0.96);
-      border: 1px solid rgba(2, 132, 199, 0.7);
-      color: #fff;
-      padding: 9px 20px;
-      border-radius: 24px;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--surface-solid);
+      border: 1px solid var(--line);
+      color: var(--ink-strong);
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 12.5px;
       font-weight: 500;
       z-index: 9999;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
       opacity: 0;
       pointer-events: none;
-      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: opacity 0.2s, transform 0.2s;
       display: flex;
       align-items: center;
       gap: 8px;
-      backdrop-filter: blur(8px);
     }
     #toast.show {
       transform: translateX(-50%) translateY(0);
@@ -499,132 +615,109 @@
       pointer-events: auto;
     }
 
-    /* BOTTOM TIMELINE PLAYER (ICONIC WINDY STYLE) */
+    /* BOTTOM TIMELINE PLAYER */
     #timeline {
       position: absolute;
       left: 0;
       right: 0;
       bottom: 0;
       z-index: 1000;
-      padding: 8px max(16px, env(safe-area-inset-right, 16px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 16px));
+      padding: 8px max(14px, env(safe-area-inset-right, 14px)) calc(9px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 14px));
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: linear-gradient(to top, rgba(14, 18, 24, 0.98), rgba(14, 18, 24, 0.8) 75%, transparent);
+      gap: 10px;
+      background: var(--timeline-bg);
+      border-top: 1px solid var(--line-subtle);
     }
     #playBtn {
       flex: none;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: var(--windy-red);
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: var(--brand-primary);
       color: #fff;
       cursor: pointer;
       display: grid;
       place-items: center;
-      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.5);
-      transition: transform 0.1s, background 0.15s;
+      transition: background 0.15s;
     }
-    #playBtn:hover { background: var(--windy-red-hover); transform: scale(1.05); }
-    #playBtn:active { transform: scale(0.95); }
-    #playBtn svg { width: 18px; height: 18px; }
+    #playBtn:hover { background: var(--brand-primary-hover); }
+    #playBtn svg { width: 15px; height: 15px; }
 
     #speedBtn {
       flex: none;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--glass-border);
-      color: #fff;
-      border-radius: 8px;
-      padding: 6px 9px;
-      font-family: var(--f-num);
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 5px 9px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
     }
+    #speedBtn:hover { border-color: var(--hover-border); }
 
-    .quick-jump-group {
-      display: flex;
-      gap: 4px;
-    }
+    .quick-jump-group { display: flex; gap: 5px; align-items: center; }
     .jump-chip {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--glass-border);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
       color: var(--mute);
-      padding: 5px 9px;
+      padding: 5px 10px;
       border-radius: 6px;
       font-size: 11.5px;
+      font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.15s;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
     .jump-chip:hover {
-      background: rgba(2, 132, 199, 0.18);
-      color: #fff;
-      border-color: var(--windy-red);
+      background: var(--surface-hover);
+      color: var(--ink-strong);
+      border-color: var(--hover-border);
     }
 
     #datePickerInput {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--glass-border);
-      color: #fff;
-      font-family: var(--f-num);
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      color: var(--ink);
       font-size: 12px;
-      padding: 4px 6px;
+      padding: 4px 7px;
       border-radius: 6px;
       cursor: pointer;
     }
 
     /* TIMELINE SCRUB TRACK */
-    #track {
-      position: relative;
-      flex: 1;
-      height: 44px;
-      cursor: pointer;
-      min-width: 0;
-    }
-    #rail {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 22px;
-      height: 4px;
-      border-radius: 2px;
-      background: #2b3542;
-    }
-    #fill {
-      position: absolute;
-      left: 0;
-      top: 22px;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--windy-red);
-    }
+    #track { position: relative; flex: 1; height: 42px; cursor: pointer; min-width: 0; }
+    #rail { position: absolute; left: 0; right: 0; top: 20px; height: 3px; border-radius: 2px; background: var(--rail-bg); }
+    #fill { position: absolute; left: 0; top: 20px; height: 3px; border-radius: 2px; background: var(--brand-primary); }
     #thumb {
       position: absolute;
-      top: 16px;
-      width: 16px;
-      height: 16px;
-      margin-left: -8px;
+      top: 14px;
+      width: 14px;
+      height: 14px;
+      margin-left: -7px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid var(--windy-bg);
-      box-shadow: 0 0 0 1px var(--windy-red);
+      background: #f8fafc;
+      border: 2px solid var(--brand-primary);
     }
     #bubble {
       position: absolute;
-      bottom: 30px;
+      bottom: 28px;
       transform: translateX(-50%);
-      background: var(--windy-red);
-      color: #fff;
-      font-family: var(--f-num);
-      font-size: 12px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      color: var(--ink-strong);
+      font-size: 11.5px;
       font-weight: 600;
       padding: 3px 8px;
-      border-radius: 6px;
+      border-radius: 5px;
       white-space: nowrap;
       pointer-events: none;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
     }
     #bubble::after {
       content: "";
@@ -634,74 +727,71 @@
       margin-left: -5px;
       border: 5px solid transparent;
       border-bottom: 0;
-      border-top-color: var(--windy-red);
+      border-top-color: var(--surface-elevated);
     }
     #ticks {
       position: absolute;
       left: 0;
       right: 0;
-      top: 30px;
+      top: 28px;
       height: 14px;
       font-size: 10px;
       color: var(--mute);
     }
     #ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
-    #ticks span.y { color: #fff; font-weight: 600; }
-    #ticks i { position: absolute; top: -8px; width: 1px; height: 5px; background: #445466; }
+    #ticks span.y { color: var(--ink); font-weight: 600; }
+    #ticks i { position: absolute; top: -8px; width: 1px; height: 5px; background: var(--tick-mark); }
 
-    /* BOTTOM-RIGHT FLOATING LEGEND (SINGLE UNIFIED TURBO COLOR BAR) */
+    /* BOTTOM-RIGHT FLOATING LEGEND */
     #legendBox {
       position: absolute;
       right: max(14px, env(safe-area-inset-right, 14px));
-      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(74px + env(safe-area-inset-bottom, 0px));
       z-index: 990;
-      width: 240px;
+      width: 236px;
       padding: 7px 12px 6px;
     }
     #legendBox .leg-header {
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: space-between;
       font-size: 11px;
       font-weight: 600;
-      color: #cbd5e1;
+      color: var(--ink);
       margin-bottom: 5px;
     }
-    #legbar {
-      height: 9px;
-      border-radius: 5px;
-      margin-bottom: 3px;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
-    }
-    #legticks { position: relative; height: 13px; font-family: var(--f-num); font-size: 9.5px; color: var(--mute); }
+    #legbar { height: 8px; border-radius: 4px; margin-bottom: 3px; }
+    #legticks { position: relative; height: 13px; font-size: 9.5px; color: var(--mute); }
     #legticks span { position: absolute; transform: translateX(-50%); }
 
     /* HOVER TOOLTIP */
     #tip {
       position: absolute;
       pointer-events: none;
-      padding: 8px 12px;
+      padding: 7px 11px;
       font-size: 12px;
-      border-radius: 8px;
+      border-radius: 6px;
       white-space: nowrap;
       transform: translate(14px, -50%);
       z-index: 1500;
     }
-    #tip .tip-title { font-weight: 700; color: #fff; margin-bottom: 2px; }
-    #tip .tip-pm { font-family: var(--f-num); font-size: 13px; font-weight: 700; color: var(--accent); }
+    #tip .tip-title { font-weight: 600; color: var(--ink-strong); margin-bottom: 2px; }
+    #tip .tip-pm { font-size: 12.5px; font-weight: 600; color: var(--accent); }
 
-    /* BOTTOM FORECAST DRAWER (POINT DETAIL) - WINDY COMPACT STYLE */
+    /* BOTTOM POINT DETAIL DRAWER (UNIFIED DARK SLATE) */
     #sheet {
       position: absolute;
       left: 0;
       right: 0;
       bottom: 0;
-      background: #f8fafc;
-      color: #111a24;
+      background: var(--surface-solid);
+      color: var(--ink);
+      border-top: 1px solid var(--line);
+      border-radius: 0;
       z-index: 1200;
-      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.48);
       transform: translateY(105%);
-      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
       padding-bottom: env(safe-area-inset-bottom, 0px);
       max-height: 295px;
       min-height: 38px;
@@ -715,13 +805,11 @@
     #sheet.collapsed { height: 38px !important; }
     #sheet.collapsed .body { display: none !important; }
 
-    /* DRAG RESIZE HANDLE BAR */
     .sheet-resizer {
       width: 100%;
-      height: 10px;
-      background: #e2e8f0;
-      border-top: 1px solid #cbd5e1;
-      border-bottom: 1px solid #dbe2ea;
+      height: 8px;
+      background: var(--surface-solid);
+      border-bottom: 1px solid var(--line-subtle);
       cursor: ns-resize;
       display: flex;
       align-items: center;
@@ -729,53 +817,49 @@
       flex-shrink: 0;
       user-select: none;
       touch-action: none;
-      transition: background 0.15s ease;
       position: relative;
     }
-    .sheet-resizer:hover, .sheet-resizer:active, #sheet.dragging .sheet-resizer {
-      background: #cbd5e1;
-    }
+    .sheet-resizer:hover, #sheet.dragging .sheet-resizer { background: var(--surface-elevated); }
     .sheet-resizer-pill {
-      width: 36px;
+      width: 32px;
       height: 3px;
-      background: #94a3b8;
+      background: var(--resizer-pill);
       border-radius: 999px;
-      transition: width 0.2s ease, background 0.2s ease;
+      transition: width 0.15s, background 0.15s;
     }
     .sheet-resizer:hover .sheet-resizer-pill, #sheet.dragging .sheet-resizer-pill {
-      width: 56px;
-      background: var(--windy-red);
+      width: 48px;
+      background: var(--accent);
     }
     .sheet-resizer-hint {
       position: absolute;
       right: 12px;
       font-size: 9.5px;
-      color: #64748b;
+      color: var(--mute);
       display: flex;
       align-items: center;
       gap: 3px;
       pointer-events: none;
     }
-    @media (max-width: 640px) {
-      .sheet-resizer-hint { display: none; }
-    }
+    @media (max-width: 640px) { .sheet-resizer-hint { display: none; } }
+
     #sheet .bar {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 3px 12px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 14px;
+      border-bottom: 1px solid var(--line-subtle);
       flex-shrink: 0;
-      background: #ffffff;
-      min-height: 28px;
+      background: var(--surface-solid);
+      min-height: 30px;
     }
     #closeSheet {
       width: 22px;
       height: 22px;
-      border-radius: 50%;
-      border: none;
-      background: var(--bad);
-      color: #fff;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface-elevated);
+      color: var(--mute);
       font-size: 14px;
       cursor: pointer;
       display: grid;
@@ -783,77 +867,113 @@
       line-height: 1;
       flex-shrink: 0;
     }
+    #closeSheet:hover { color: var(--ink-strong); border-color: var(--hover-border); }
+    #sTitle { font-weight: 600; color: var(--ink-strong); }
+    #sSub { color: var(--mute); }
+    #sheet .bar .jump-chip {
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 2px 8px;
+      font-size: 10.5px;
+      height: 22px;
+    }
+    #sheet .bar .jump-chip:hover { border-color: var(--hover-border); }
+
     #sheet .body {
       display: flex;
-      gap: 10px;
-      padding: 5px 12px 6px;
+      gap: 16px;
+      padding: 7px 14px 8px;
       min-height: 0;
       overflow: hidden;
       flex: 1;
     }
-    #sheet .left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    #sheet .left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
     #spark {
       width: 100%;
       height: 38px;
       cursor: pointer;
-      border: 1px solid #e2e8f0;
-      border-radius: 5px;
-      background: #fff;
+      border: none;
+      border-bottom: 1px solid var(--line-subtle);
+      background: var(--spark-bg);
       flex-shrink: 0;
     }
-    .gridwrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 5px; background: #fff; }
-    table.mg { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 10px; width: 100%; }
+    .gridwrap { overflow-x: auto; background: transparent; }
+    table.mg { border-collapse: collapse; font-size: 10.5px; width: 100%; }
     table.mg th {
       position: sticky;
       left: 0;
-      background: #fff;
+      background: var(--surface-solid);
       z-index: 1;
       text-align: left;
-      font-weight: 600;
-      color: #475569;
-      padding: 1.5px 6px;
+      font-weight: 500;
+      color: var(--mute);
+      padding: 2px 10px 2px 0;
       white-space: nowrap;
-      border-right: 1px solid #e2e8f0;
-      line-height: 1.2;
+      line-height: 1.25;
     }
     table.mg td {
       min-width: 44px;
       text-align: center;
-      padding: 1px 2px;
-      font-family: var(--f-num);
-      border-left: 1px solid #f1f5f9;
+      padding: 2px 3px;
+      color: var(--table-cell-ink);
       cursor: pointer;
-      line-height: 1.15;
-    }
-    table.mg tr.month td {
-      font-family: var(--f-ui);
-      font-weight: 600;
-      color: #1e293b;
-      text-align: left;
-      padding: 1px 6px;
-      cursor: default;
-      background: #f8fafc;
-      font-size: 9.5px;
       line-height: 1.2;
     }
-    table.mg tr.day td { font-family: var(--f-ui); color: #64748b; font-size: 9px; line-height: 1.1; padding: 1px 2px; }
-    table.mg tr.day td b { display: block; color: #0f172a; font-family: var(--f-num); font-weight: 700; font-size: 9.5px; }
-    table.mg td.now { background: #fef3c7; }
-    .chip { display: inline-block; min-width: 28px; padding: 1px 3px; border-radius: 3px; font-weight: 600; font-size: 9.5px; line-height: 1.15; }
-    .arrow { display: inline-block; width: 10px; height: 10px; vertical-align: -1px; }
-    #sheetAbout { flex: none; width: 200px; font-size: 10px; line-height: 1.35; padding: 2px 4px; }
-    #sheetAbout h3 { font-size: 10.5px; margin: 0 0 4px 0; font-weight: 700; color: #0f172a; }
-    #sheetAbout dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0; }
-    #sheetAbout dt { color: #64748b; font-size: 9.5px; }
-    #sheetAbout dd { margin: 0; font-family: var(--f-num); text-align: right; font-weight: 600; font-size: 10px; color: #0f172a; }
+    table.mg tr + tr th, table.mg tr + tr td { border-top: 1px solid var(--table-border); }
+    table.mg tr.month td {
+      font-weight: 600;
+      color: var(--mute);
+      text-align: left;
+      padding: 2px 4px;
+      cursor: default;
+      font-size: 9.5px;
+    }
+    table.mg tr.day td { color: var(--mute); font-size: 9px; line-height: 1.15; padding: 2px 3px; }
+    table.mg tr.day td b { display: block; color: var(--ink-strong); font-weight: 600; font-size: 9.5px; }
+    table.mg td.now { background: var(--row-now); box-shadow: inset 0 2px 0 var(--accent); }
+    table.mg td:hover { background: var(--table-hover); }
+    .chip {
+      display: inline-block;
+      min-width: 28px;
+      padding: 0 2px 1px;
+      font-weight: 600;
+      font-size: 10px;
+      color: var(--ink-strong);
+      border-bottom: 2.5px solid var(--c, #64748b);
+    }
+    .aoa-in { color: var(--mute); }
+    .aoa-out { color: var(--aoa-out-col); font-weight: 600; }
+    .rain { color: var(--rain-col); }
+    .muted { color: var(--muted-cell); }
+    .arrow { display: inline-block; width: 10px; height: 10px; vertical-align: -1px; color: var(--arrow-col); }
+
+    #sheetAbout {
+      flex: none;
+      width: 215px;
+      font-size: 10px;
+      line-height: 1.4;
+      border-left: 1px solid var(--line-subtle);
+      padding: 2px 0 2px 14px;
+    }
+    #sheetAbout h3 {
+      font-size: 10px;
+      margin: 0 0 6px 0;
+      font-weight: 600;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    #sheetAbout dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; margin: 0; }
+    #sheetAbout dt { color: var(--mute); font-size: 9.5px; }
+    #sheetAbout dd { margin: 0; text-align: right; font-weight: 600; font-size: 10px; color: var(--ink-strong); }
+    #sheetAbout p { color: var(--mute); }
 
     /* MODAL OVERLAYS */
     .modal-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(14, 18, 24, 0.88);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: var(--modal-backdrop);
       z-index: 2000;
       display: grid;
       place-items: center;
@@ -861,45 +981,45 @@
       overflow-y: auto;
     }
     .modal-card {
-      background: #161b22;
-      border: 1px solid var(--glass-border);
-      border-radius: 14px;
+      background: var(--surface-solid);
+      border: 1px solid var(--line);
+      border-radius: 10px;
       width: 100%;
-      max-width: 960px;
+      max-width: 940px;
       max-height: 88vh;
       overflow-y: auto;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-      padding: 24px;
+      padding: 22px 24px;
       position: relative;
     }
     .modal-close {
       position: absolute;
       top: 16px;
       right: 16px;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.06);
-      color: #fff;
-      font-size: 18px;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface-elevated);
+      color: var(--ink);
+      font-size: 16px;
       cursor: pointer;
       display: grid;
       place-items: center;
     }
-    .modal-close:hover { background: rgba(255, 255, 255, 0.15); }
-    .modal-head { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); }
-    .modal-head h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-    .modal-head p { font-size: 13px; color: var(--mute); line-height: 1.5; }
+    .modal-close:hover { background: var(--surface-hover); }
+    .modal-head { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line-subtle); }
+    .modal-head h2 { font-size: 18px; font-weight: 600; color: var(--ink-strong); margin-bottom: 4px; }
+    .modal-head p { font-size: 12.5px; color: var(--mute); line-height: 1.5; }
 
     /* KPI CARDS & BARS */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 18px; }
-    .kpi-box { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px; }
-    .kpi-box .lbl { font-size: 11px; color: var(--mute); text-transform: uppercase; margin-bottom: 4px; }
-    .kpi-box .val { font-size: 22px; font-weight: 800; font-family: var(--f-num); }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .kpi-box { background: var(--surface-elevated); border: 1px solid var(--line-subtle); border-radius: 8px; padding: 12px; }
+    .kpi-box .lbl { font-size: 10.5px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .kpi-box .val { font-size: 21px; font-weight: 700; color: var(--ink-strong); }
     .bar-row { display: grid; grid-template-columns: 140px 1fr 60px; gap: 10px; align-items: center; margin-bottom: 7px; font-size: 12px; }
-    .bar-track { height: 9px; background: rgba(255, 255, 255, 0.08); border-radius: 5px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 5px; background: var(--windy-red); }
+    .bar-track { height: 7px; background: var(--bar-track); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: var(--brand-primary); }
 
     /* LOADING SCREEN */
     #loading {
@@ -911,13 +1031,13 @@
       z-index: 3000;
     }
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(2, 132, 199, 0.2);
-      border-top-color: var(--windy-red);
+      width: 34px;
+      height: 34px;
+      border: 2.5px solid rgba(56, 189, 248, 0.2);
+      border-top-color: var(--brand-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin: 0 auto 14px;
+      margin: 0 auto 12px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -926,286 +1046,13 @@
       #topNavLeft .search-input { width: 140px; }
       #topNavLeft .search-input:focus { width: 180px; }
       #topNavRight .nav-pill span { display: none; }
-      #layerDock { width: 140px; }
+      #layerDock { width: 150px; }
       #legendBox { display: none; }
     }
     @media (max-width: 600px) {
       #topStations { display: none; }
       .quick-jump-group { display: none; }
     }
-  </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"><link id="font-inter" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"><style id="modern-style-override">
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-    :root {
-      --brand-navy: #0c254b;
-      --brand-primary: #0284c7;
-      --brand-primary-hover: #0ea5e9;
-      --brand-cyan: #38bdf8;
-      --f-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-      --f-num: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-      --blue-badge: #0284c7;
-      --blue-badge-glow: rgba(14, 165, 233, 0.45);
-      --pill-border-active: rgba(14, 165, 233, 0.5);
-      --pill-bg-active: rgba(12, 37, 75, 0.85);
-    }
-
-    * {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    }
-
-    body, button, input, select, textarea, .modal, .tooltip, .leaflet-container, .glass, .dock-title, .search-input, .station-btn, .nav-pill, .jump-chip {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Tabular numbers for clean numeric gauges and tables */
-    .live-val, .tip-pm, table.mg td b, #sheetAbout dd, .card-val, .bar-pct, .legend-ticks, .coord, [style*="font-family:var(--f-num)"] {
-      font-variant-numeric: tabular-nums !important;
-    }
-
-    /* Station Buttons in #topStations */
-    .station-btn {
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 6px !important;
-      font-size: 12.5px !important;
-      font-weight: 500 !important;
-      padding: 6px 13px !important;
-      border-radius: 9999px !important;
-      background: rgba(11, 27, 51, 0.65) !important;
-      border: 1px solid rgba(255, 255, 255, 0.12) !important;
-      color: #cbd5e1 !important;
-      transition: all 0.2s ease !important;
-      cursor: pointer !important;
-    }
-    .station-btn:hover {
-      background: rgba(16, 42, 77, 0.85) !important;
-      border-color: #38bdf8 !important;
-      color: #ffffff !important;
-    }
-    .station-btn.active {
-      background: #0284c7 !important;
-      border-color: #38bdf8 !important;
-      color: #ffffff !important;
-      box-shadow: 0 0 12px rgba(14, 165, 233, 0.4) !important;
-    }
-    .station-btn .svg-station-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 15px;
-      height: 15px;
-      flex-shrink: 0;
-    }
-
-    /* Top Nav Right Buttons */
-    .nav-pill {
-      font-size: 12.5px !important;
-      font-weight: 500 !important;
-      border-radius: 9999px !important;
-      padding: 6px 14px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 7px !important;
-      letter-spacing: -0.01em !important;
-      background: rgba(11, 27, 51, 0.65) !important;
-      border: 1px solid rgba(255, 255, 255, 0.12) !important;
-      color: #cbd5e1 !important;
-      cursor: pointer !important;
-      transition: all 0.2s ease !important;
-    }
-    .nav-pill:hover {
-      background: rgba(16, 42, 77, 0.85) !important;
-      border-color: #38bdf8 !important;
-      color: #ffffff !important;
-    }
-    .nav-pill.active {
-      background: #0284c7 !important;
-      border-color: #38bdf8 !important;
-      color: #ffffff !important;
-      box-shadow: 0 0 12px rgba(14, 165, 233, 0.4) !important;
-    }
-
-    /* Layer Items (Pills styled like Image 1) */
-    .layer-item-check {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      padding: 5px 12px 5px 5px !important;
-      border-radius: 9999px !important;
-      background: rgba(11, 27, 51, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      margin-bottom: 8px !important;
-      cursor: pointer !important;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      user-select: none !important;
-      box-sizing: border-box !important;
-    }
-    .layer-item-check * {
-      pointer-events: none !important;
-    }
-    .layer-item-check:hover {
-      background: rgba(16, 42, 77, 0.85) !important;
-      border-color: rgba(56, 189, 248, 0.3) !important;
-    }
-    .layer-item-check.active {
-      background: var(--pill-bg-active) !important;
-      border-color: var(--pill-border-active) !important;
-      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.25) !important;
-    }
-
-    /* Left Circular Badge */
-    .layer-item-check .pill-badge {
-      width: 28px !important;
-      height: 28px !important;
-      border-radius: 50% !important;
-      background: rgba(255, 255, 255, 0.08) !important;
-      color: #94a3b8 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      margin-right: 9px !important;
-      flex-shrink: 0 !important;
-      transition: all 0.2s ease !important;
-    }
-    .layer-item-check.active .pill-badge {
-      background: var(--blue-badge) !important;
-      color: #ffffff !important;
-      box-shadow: 0 0 10px var(--blue-badge-glow) !important;
-    }
-
-    /* Middle Label */
-    .layer-item-check .pill-label {
-      flex: 1 !important;
-      font-size: 12.8px !important;
-      font-weight: 500 !important;
-      color: #94a3b8 !important;
-      white-space: nowrap !important;
-      letter-spacing: -0.01em !important;
-    }
-    .layer-item-check.active .pill-label {
-      color: #f8fafc !important;
-      font-weight: 600 !important;
-    }
-
-    /* Right Checkmark */
-    .layer-item-check .pill-check {
-      width: 18px !important;
-      height: 18px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      opacity: 0 !important;
-      transform: scale(0.6) !important;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      flex-shrink: 0 !important;
-    }
-    .layer-item-check.active .pill-check {
-      opacity: 1 !important;
-      transform: scale(1) !important;
-    }
-    .layer-item-check input[type="checkbox"] {
-      display: none !important;
-    }
-
-    /* Basemap box grid item styling */
-    .basemap-box .layer-item-check {
-      margin-top: 8px !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-
-    /* Opacity Slider styled to Logo Blue */
-    .slider-row input[type=range] {
-      accent-color: #0284c7 !important;
-      cursor: pointer;
-    }
-
-    /* Jump Chips (Bottom Bar) */
-    .jump-chip {
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 5px !important;
-      font-size: 11.8px !important;
-      font-weight: 500 !important;
-      border-radius: 9999px !important;
-      padding: 5px 11px !important;
-      letter-spacing: -0.01em !important;
-    }
-  </style>
-  <!-- MINIMAL UI OVERRIDE: flat surfaces, hairline borders, no glow, colour only where it carries data -->
-  <style id="minimal-ui-override">
-    :root {
-      --m-surface: rgba(17, 24, 33, 0.92);
-      --m-surface-hover: rgba(30, 40, 52, 0.95);
-      --m-line: rgba(255, 255, 255, 0.10);
-      --m-text: #e5e9ef;
-      --m-text-dim: #8b97a6;
-      --m-accent: #38bdf8;
-    }
-    .glass { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: 0 1px 2px rgba(0,0,0,.35) !important; border-radius: 8px !important; }
-
-    /* Top pills: flat, no glow */
-    .station-btn, .nav-pill {
-      background: var(--m-surface) !important; border: 1px solid var(--m-line) !important;
-      color: var(--m-text-dim) !important; border-radius: 6px !important; box-shadow: none !important;
-      padding: 5px 11px !important; font-size: 12px !important; transition: color .15s, border-color .15s !important;
-    }
-    .station-btn:hover, .nav-pill:hover { background: var(--m-surface-hover) !important; border-color: rgba(255,255,255,.22) !important; color: var(--m-text) !important; }
-    .station-btn.active, .nav-pill.active { background: var(--m-surface) !important; color: #fff !important; border-color: var(--m-accent) !important; box-shadow: none !important; }
-    .search-input { border-radius: 6px !important; box-shadow: none !important; background: var(--m-surface) !important; }
-
-    /* Layer panel: plain rows instead of glowing pills */
-    .layer-item-check { background: transparent !important; border: none !important; border-radius: 4px !important; padding: 6px 4px !important; margin-bottom: 2px !important; box-shadow: none !important; }
-    .layer-item-check:hover { background: rgba(255,255,255,.05) !important; }
-    .layer-item-check.active { background: transparent !important; box-shadow: none !important; }
-    .layer-item-check .pill-badge { width: 22px !important; height: 22px !important; background: transparent !important; color: var(--m-text-dim) !important; box-shadow: none !important; margin-right: 6px !important; }
-    .layer-item-check.active .pill-badge { background: transparent !important; color: var(--m-accent) !important; box-shadow: none !important; }
-    .layer-item-check .pill-label { color: var(--m-text-dim) !important; font-weight: 500 !important; }
-    .layer-item-check.active .pill-label { color: var(--m-text) !important; font-weight: 500 !important; }
-    .basemap-box .layer-item-check { border-top: none !important; }
-    .jump-chip { border-radius: 6px !important; box-shadow: none !important; }
-
-    /* Bottom sheet: one flat surface, hairlines only */
-    #sheet { background: #ffffff !important; border: none !important; border-top: 1px solid #e5e7eb !important; border-radius: 0 !important; box-shadow: 0 -1px 0 rgba(0,0,0,.04), 0 -6px 16px rgba(0,0,0,.08) !important; }
-    .sheet-resizer { height: 8px !important; background: #fff !important; border: none !important; }
-    .sheet-resizer:hover, #sheet.dragging .sheet-resizer { background: #f3f4f6 !important; }
-    .sheet-resizer-pill, .sheet-resizer:hover .sheet-resizer-pill, #sheet.dragging .sheet-resizer-pill { width: 32px !important; height: 3px !important; background: #d1d5db !important; }
-    #sheet .bar { background: #fff !important; border-bottom: 1px solid #f0f1f3 !important; padding: 6px 14px !important; }
-    #closeSheet { background: transparent !important; color: #6b7280 !important; border: 1px solid #e5e7eb !important; border-radius: 6px !important; font-size: 15px !important; }
-    #closeSheet:hover { color: #111827 !important; border-color: #d1d5db !important; }
-    #sTitle { font-weight: 600 !important; color: #111827 !important; }
-    #sSub { color: #6b7280 !important; }
-    #sheet .bar .jump-chip { background: transparent !important; border: 1px solid #e5e7eb !important; color: #374151 !important; border-radius: 6px !important; font-weight: 500 !important; }
-    #sheet .bar .jump-chip:hover { border-color: #9ca3af !important; color: #111827 !important; }
-    #sheet .body { padding: 8px 14px 8px !important; gap: 20px !important; }
-    #spark { border: none !important; border-bottom: 1px solid #f0f1f3 !important; border-radius: 0 !important; }
-    .gridwrap { border: none !important; border-radius: 0 !important; }
-
-    table.mg { font-size: 10.5px !important; }
-    table.mg th { color: #6b7280 !important; font-weight: 500 !important; border-right: none !important; padding: 2px 10px 2px 0 !important; }
-    table.mg td { border-left: none !important; padding: 2px 3px !important; color: #374151; }
-    table.mg tr + tr th, table.mg tr + tr td { border-top: 1px solid #f3f4f6; }
-    table.mg tr.month td { background: transparent !important; color: #6b7280 !important; font-weight: 500 !important; }
-    table.mg tr.day td { color: #9ca3af !important; }
-    table.mg tr.day td b { color: #111827 !important; font-weight: 600 !important; }
-    table.mg td.now { background: #f3f4f6 !important; box-shadow: inset 0 2px 0 #111827; }
-    table.mg td:hover { background: #f9fafb; }
-
-    /* PM2.5: plain number with a thin colour bar instead of a filled badge */
-    .chip { background: none !important; color: #111827 !important; font-weight: 600 !important; border-radius: 0 !important; padding: 0 2px 1px !important; border-bottom: 3px solid var(--c, #d1d5db); }
-    .aoa-in { color: #9ca3af; }
-    .aoa-out { color: #dc2626; font-weight: 600; }
-    .rain { color: #2563eb; }
-    .muted { color: #d1d5db; }
-
-    #sheetAbout { width: 210px !important; border-left: 1px solid #f0f1f3; padding: 2px 0 2px 16px !important; }
-    #sheetAbout h3 { font-size: 10px !important; font-weight: 600 !important; color: #6b7280 !important; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px !important; }
-    #sheetAbout dl { gap: 4px 8px !important; }
-    #sheetAbout dt { color: #6b7280 !important; }
-    #sheetAbout dd { color: #111827 !important; font-weight: 600 !important; }
-    #sheetAbout p { color: #9ca3af !important; }
   </style></head>
 <body class="">
 
@@ -1266,23 +1113,29 @@
 
   <!-- TOP-RIGHT: LIVE AQI & NAV MODALS -->
   <div id="topNavRight">
-    <div id="livePill" title="Chất lượng không khí trung bình ngày hiện tại của toàn Thành phố Đà Nẵng">
-      <div class="live-dot"></div>
-      <span>TB Thành phố:</span>
-      <span class="live-val" id="liveVal">51,5 µg/m³</span>
-      <span class="aqi-badge" id="liveAqi" style="color: rgb(249, 115, 22); background: rgba(249, 115, 22, 0.2);">Kém</span>
+    <div id="livePill" title="Chất lượng không khí trung bình ngày của toàn Thành phố Đà Nẵng">
+      <span>PM2.5 TB ngày:</span>
+      <span class="live-val" id="liveVal">—</span>
+      <span class="aqi-badge" id="liveAqi">—</span>
     </div>
 
     <button class="nav-pill" id="btnDashboard">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
       <span>Phân tích</span>
     </button>
-    <button class="nav-pill" id="btnValidation" title="Đánh giá mô hình CatBoost dự báo PM2.5">
+    <button class="nav-pill" id="btnValidation" title="Đánh giá mô hình CatBoost tái cấu trúc PM2.5">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="m9 11 3 3L22 4"></path>
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
       </svg>
       <span>Đánh giá mô hình</span>
+    </button>
+    <button class="nav-pill" id="btnTheme" title="Chuyển giao diện Sáng / Tối">
+      <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+      </svg>
+      <span id="themeLabel">Sáng</span>
     </button>
   </div>
 
@@ -1291,6 +1144,7 @@
     <div id="layerDock" class="glass">
       <div class="dock-title">Lớp Dữ Liệu</div>
       <div class="layer-item-check active" id="layPm25" title="Bật/tắt hiển thị lớp bụi mịn PM2.5">
+        <button type="button" class="layer-info-btn" data-layer-info="pm25" title="Giải thích cách tính Bụi mịn PM2.5 trên mô hình">i</button>
         <div class="pill-badge">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
@@ -1298,7 +1152,7 @@
         </div>
         <span class="pill-label">Bụi mịn PM2.5</span>
         <div class="pill-check">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
@@ -1306,6 +1160,7 @@
       </div>
 
       <div class="layer-item-check active" id="layWind" title="Bật/tắt hiển thị luồng gió động">
+        <button type="button" class="layer-info-btn" data-layer-info="wind" title="Giải thích dữ liệu Gió và ảnh hưởng tới bụi mịn">i</button>
         <div class="pill-badge">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12.8 19.6A2 2 0 1 0 14 16H2"></path>
@@ -1315,7 +1170,7 @@
         </div>
         <span class="pill-label">Gió</span>
         <div class="pill-check">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
@@ -1323,6 +1178,7 @@
       </div>
 
       <div class="layer-item-check active" id="layAoa" title="Bật/tắt mặt nạ vùng tin cậy">
+        <button type="button" class="layer-info-btn" data-layer-info="aoa" title="Giải thích cách tính Vùng tin cậy (AOA)">i</button>
         <div class="pill-badge">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -1331,7 +1187,7 @@
         </div>
         <span class="pill-label">Vùng tin cậy</span>
         <div class="pill-check">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
@@ -1342,10 +1198,10 @@
       <div class="basemap-box">
         <div class="dock-title" style="padding:0">Bản Đồ Nền</div>
         <select class="basemap-select" id="selBasemap">
-          <option value="googleRoad">Đường phố</option>
-          <option value="googleHybrid" selected>Vệ tinh</option>
+          <option value="googleRoad" selected>Đường phố</option>
+          <option value="googleHybrid">Vệ tinh</option>
         </select>
-        <div class="layer-item-check active" id="layGrid" style="margin-top:6px" title="Bật/tắt hiển thị ô lưới 1 km">
+        <div class="layer-item-check" id="layGrid" style="margin-top:6px" title="Bật/tắt hiển thị ô lưới 1 km">
           <div class="pill-badge">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="18" height="18" x="3" y="3" rx="2"></rect>
@@ -1354,17 +1210,17 @@
           </div>
           <span class="pill-label">Ô lưới 1 km</span>
           <div class="pill-check">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <input type="checkbox" id="chkGrid" checked>
+          <input type="checkbox" id="chkGrid">
         </div>
       </div>
 
       <!-- OPACITY SLIDER -->
       <div class="slider-row">
-        <span>Độ mờ PM2.5: <b id="lblOpacity">73%</b></span>
+        <span>Độ mờ PM2.5: <b id="lblOpacity">72%</b></span>
         <input type="range" id="rngOpacity" min="15" max="100" value="72">
       </div>
     </div>
@@ -1396,7 +1252,7 @@
   </div>
 
   <!-- HOVER TOOLTIP & TOAST NOTIFICATION -->
-  <div id="tip" class="glass" style="left: 1226px; top: 587.805px;" hidden="">
+  <div id="tip" class="glass" hidden>
     <div class="tip-title" id="tipLoc">TP. Đà Nẵng (16.054°N, 108.202°E)</div>
     <div class="tip-pm" id="tipPm">46,2 µg/m³ · <span style="color:#f59e0b">Trung bình</span></div>
     <div style="font-size:11px;color:var(--mute);margin-top:2px" id="tipExtra"><span style="color:#10b981">Trong miền tin cậy AOA</span></div>
@@ -1429,10 +1285,10 @@
 
     <div id="track" role="slider" tabindex="0" aria-label="Chọn ngày">
       <div id="rail"></div>
-      <div id="fill" style="width: 88.3962%;"></div>
-      <div id="ticks"><i style="left:0%"></i><span class="y" style="left:0%">2023</span><i style="left:2.2912047302291203%;height:3px;top:-7px"></i><i style="left:4.360679970436069%;height:3px;top:-7px"></i><i style="left:6.651884700665188%"></i><span style="left:6.651884700665188%">T4</span><i style="left:8.869179600886918%;height:3px;top:-7px"></i><i style="left:11.160384331116038%;height:3px;top:-7px"></i><i style="left:13.377679231337769%"></i><span style="left:13.377679231337769%">T7</span><i style="left:15.668883961566888%;height:3px;top:-7px"></i><i style="left:17.96008869179601%;height:3px;top:-7px"></i><i style="left:20.17738359201774%"></i><span style="left:20.17738359201774%">T10</span><i style="left:22.46858832224686%;height:3px;top:-7px"></i><i style="left:24.68588322246859%;height:3px;top:-7px"></i><i style="left:26.97708795269771%"></i><span class="y" style="left:26.97708795269771%">2024</span><i style="left:29.268292682926827%;height:3px;top:-7px"></i><i style="left:31.411677753141166%;height:3px;top:-7px"></i><i style="left:33.70288248337029%"></i><span style="left:33.70288248337029%">T4</span><i style="left:35.92017738359202%;height:3px;top:-7px"></i><i style="left:38.21138211382114%;height:3px;top:-7px"></i><i style="left:40.42867701404287%"></i><span style="left:40.42867701404287%">T7</span><i style="left:42.71988174427199%;height:3px;top:-7px"></i><i style="left:45.01108647450111%;height:3px;top:-7px"></i><i style="left:47.22838137472284%"></i><span style="left:47.22838137472284%">T10</span><i style="left:49.519586104951955%;height:3px;top:-7px"></i><i style="left:51.736881005173686%;height:3px;top:-7px"></i><i style="left:54.02808573540281%"></i><span class="y" style="left:54.02808573540281%">2025</span><i style="left:56.31929046563193%;height:3px;top:-7px"></i><i style="left:58.38876570583887%;height:3px;top:-7px"></i><i style="left:60.679970436068%"></i><span style="left:60.679970436068%">T4</span><i style="left:62.897265336289735%;height:3px;top:-7px"></i><i style="left:65.18847006651885%;height:3px;top:-7px"></i><i style="left:67.40576496674058%"></i><span style="left:67.40576496674058%">T7</span><i style="left:69.6969696969697%;height:3px;top:-7px"></i><i style="left:71.98817442719881%;height:3px;top:-7px"></i><i style="left:74.20546932742054%"></i><span style="left:74.20546932742054%">T10</span><i style="left:76.49667405764967%;height:3px;top:-7px"></i><i style="left:78.7139689578714%;height:3px;top:-7px"></i><i style="left:81.00517368810051%"></i><span class="y" style="left:81.00517368810051%">2026</span><i style="left:83.29637841832964%;height:3px;top:-7px"></i><i style="left:85.36585365853658%;height:3px;top:-7px"></i><i style="left:87.6570583887657%"></i><span style="left:87.6570583887657%">T4</span><i style="left:89.87435328898744%;height:3px;top:-7px"></i><i style="left:92.16555801921655%;height:3px;top:-7px"></i><i style="left:94.38285291943829%"></i><span style="left:94.38285291943829%">T7</span><i style="left:96.67405764966742%;height:3px;top:-7px"></i><i style="left:98.96526237989653%;height:3px;top:-7px"></i></div>
-      <div id="thumb" style="left: 88.3962%;"></div>
-      <div id="bubble" style="left: 88.3962%;">Thứ 7, 11/04/2026</div>
+      <div id="fill" style="width: 0%;"></div>
+      <div id="ticks"></div>
+      <div id="thumb" style="left: 0%;"></div>
+      <div id="bubble" style="left: 0%;">—</div>
     </div>
   </div>
 
@@ -1450,12 +1306,12 @@
       <button id="closeSheet" aria-label="Đóng" title="Đóng bảng">×</button>
       <div style="margin-left:6px;min-width:0;flex:1">
         <h2 id="sTitle" style="font-size:12px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">TP. Đà Nẵng (16.054°N, 108.202°E)</h2>
-        <div style="font-size:10px;color:#627282;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2" id="sSub">Ô lưới 1 km · Cách Tam Kỳ 1,2 km</div>
+        <div style="font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2" id="sSub">—</div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <button id="prevW" class="jump-chip" style="color:#111a24;border-color:#cbd5e1;background:#fff;padding:2px 7px;font-size:10px;height:22px">‹ 7 ngày</button>
-        <button id="nextW" class="jump-chip" style="color:#111a24;border-color:#cbd5e1;background:#fff;padding:2px 7px;font-size:10px;height:22px">7 ngày ›</button>
-        <button id="btnToggleSheet" class="jump-chip" style="color:#111a24;border-color:#cbd5e1;background:#fff;display:inline-flex;align-items:center;gap:3px;font-weight:600;padding:2px 7px;font-size:10px;height:22px" title="Thu gọn / Mở rộng bảng">
+        <button id="prevW" class="jump-chip">‹ 7 ngày</button>
+        <button id="nextW" class="jump-chip">7 ngày ›</button>
+        <button id="btnToggleSheet" class="jump-chip" title="Thu gọn / Mở rộng bảng">
           <svg id="iconToggleSheet" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
           <span id="lblToggleSheet">Thu gọn</span>
         </button>
@@ -1464,17 +1320,9 @@
     <div class="body">
       <div class="left">
         <canvas id="spark" aria-label="Chuỗi thời gian 4 năm" width="2529" height="57"></canvas>
-        <div class="gridwrap"><table class="mg" id="mg"><tbody><tr class="month"><th></th><td colspan="21"><span>Tháng 4/2026</span></td></tr><tr class="day"><th>Ngày</th><td data-k="1186">T4<b>01</b></td><td data-k="1187">T5<b>02</b></td><td data-k="1188">T6<b>03</b></td><td data-k="1189">T7<b>04</b></td><td data-k="1190">CN<b>05</b></td><td data-k="1191">T2<b>06</b></td><td data-k="1192">T3<b>07</b></td><td data-k="1193">T4<b>08</b></td><td data-k="1194">T5<b>09</b></td><td data-k="1195">T6<b>10</b></td><td data-k="1196" class="now">T7<b>11</b></td><td data-k="1197">CN<b>12</b></td><td data-k="1198">T2<b>13</b></td><td data-k="1199">T3<b>14</b></td><td data-k="1200">T4<b>15</b></td><td data-k="1201">T5<b>16</b></td><td data-k="1202">T6<b>17</b></td><td data-k="1203">T7<b>18</b></td><td data-k="1204">CN<b>19</b></td><td data-k="1205">T2<b>20</b></td><td data-k="1206">T3<b>21</b></td></tr><tr class=""><th>PM2.5 µg/m³</th><td data-k="1186"><span class="chip" style="background:rgb(210,217,58);color:#111a24">44,1</span></td><td data-k="1187"><span class="chip" style="background:rgb(168,249,60);color:#111a24">38,1</span></td><td data-k="1188"><span class="chip" style="background:rgb(105,242,112);color:#111a24">32,1</span></td><td data-k="1189"><span class="chip" style="background:rgb(241,193,56);color:#111a24">48,6</span></td><td data-k="1190"><span class="chip" style="background:rgb(241,193,56);color:#111a24">48,6</span></td><td data-k="1191"><span class="chip" style="background:rgb(210,217,58);color:#111a24">44,1</span></td><td data-k="1192"><span class="chip" style="background:rgb(250,186,56);color:#111a24">49,8</span></td><td data-k="1193"><span class="chip" style="background:rgb(225,205,57);color:#111a24">46,2</span></td><td data-k="1194"><span class="chip" style="background:rgb(187,234,59);color:#111a24">40,8</span></td><td data-k="1195"><span class="chip" style="background:rgb(212,215,58);color:#111a24">44,4</span></td><td data-k="1196" class="now"><span class="chip" style="background:rgb(245,189,56);color:#111a24">49,2</span></td><td data-k="1197"><span class="chip" style="background:rgb(218,210,58);color:#111a24">45,3</span></td><td data-k="1198"><span class="chip" style="background:rgb(197,226,58);color:#111a24">42,3</span></td><td data-k="1199"><span class="chip" style="background:rgb(179,241,59);color:#111a24">39,6</span></td><td data-k="1200"><span class="chip" style="background:rgb(128,246,92);color:#111a24">34,2</span></td><td data-k="1201"><span class="chip" style="background:rgb(174,244,60);color:#111a24">39,0</span></td><td data-k="1202"><span class="chip" style="background:rgb(102,242,115);color:#111a24">31,8</span></td><td data-k="1203"><span class="chip" style="background:rgb(31,220,188);color:#111a24">24,0</span></td><td data-k="1204"><span class="chip" style="background:rgb(36,230,173);color:#111a24">25,8</span></td><td data-k="1205"><span class="chip" style="background:rgb(69,236,144);color:#111a24">28,8</span></td><td data-k="1206"><span class="chip" style="background:rgb(105,242,112);color:#111a24">32,1</span></td></tr><tr class=""><th>AOA (Tin cậy)</th><td data-k="1186"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1187"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1188"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1189"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1190"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1191"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1192"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1193"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1194"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1195"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1196" class="now"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1197"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1198"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1199"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1200"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1201"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1202"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1203"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1204"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1205"><span style="color:#10b981;font-weight:600">Trong</span></td><td data-k="1206"><span style="color:#10b981;font-weight:600">Trong</span></td></tr><tr class=""><th>Nhiệt độ °C</th><td data-k="1186">26,7</td><td data-k="1187">26,7</td><td data-k="1188">26,5</td><td data-k="1189">27,3</td><td data-k="1190">28,1</td><td data-k="1191">27,8</td><td data-k="1192">28,7</td><td data-k="1193">28,4</td><td data-k="1194">27,7</td><td data-k="1195">27,9</td><td data-k="1196" class="now">28,5</td><td data-k="1197">28,3</td><td data-k="1198">28,1</td><td data-k="1199">28,2</td><td data-k="1200">27,5</td><td data-k="1201">27,4</td><td data-k="1202">27,0</td><td data-k="1203">26,5</td><td data-k="1204">26,5</td><td data-k="1205">26,5</td><td data-k="1206">26,9</td></tr><tr class=""><th>Độ ẩm %</th><td data-k="1186">82</td><td data-k="1187">82</td><td data-k="1188">75</td><td data-k="1189">79</td><td data-k="1190">78</td><td data-k="1191">80</td><td data-k="1192">76</td><td data-k="1193">79</td><td data-k="1194">80</td><td data-k="1195">79</td><td data-k="1196" class="now">78</td><td data-k="1197">79</td><td data-k="1198">82</td><td data-k="1199">81</td><td data-k="1200">82</td><td data-k="1201">81</td><td data-k="1202">82</td><td data-k="1203">85</td><td data-k="1204">78</td><td data-k="1205">73</td><td data-k="1206">72</td></tr><tr class=""><th>Mưa mm</th><td data-k="1186"><span style="color:#94a3b8">0</span></td><td data-k="1187"><span style="color:#94a3b8">0</span></td><td data-k="1188"><span style="color:#94a3b8">0</span></td><td data-k="1189"><span style="color:#94a3b8">0</span></td><td data-k="1190"><span style="color:#94a3b8">0</span></td><td data-k="1191"><span style="color:#94a3b8">0</span></td><td data-k="1192"><span style="color:#94a3b8">0</span></td><td data-k="1193"><span style="color:#94a3b8">0</span></td><td data-k="1194"><span style="color:#94a3b8">0</span></td><td data-k="1195"><span style="color:#94a3b8">0</span></td><td data-k="1196" class="now"><span style="color:#94a3b8">0</span></td><td data-k="1197"><span style="color:#94a3b8">0</span></td><td data-k="1198"><span style="color:#94a3b8">0</span></td><td data-k="1199"><span style="color:#94a3b8">0</span></td><td data-k="1200"><span style="color:#94a3b8">0</span></td><td data-k="1201"><span style="color:#94a3b8">0</span></td><td data-k="1202"><span style="color:#94a3b8">0</span></td><td data-k="1203"><span style="color:#94a3b8">0</span></td><td data-k="1204"><span style="color:#94a3b8">0</span></td><td data-k="1205"><span style="color:#94a3b8">0</span></td><td data-k="1206"><span style="color:#94a3b8">0</span></td></tr><tr class=""><th>Gió m/s</th><td data-k="1186">2,8</td><td data-k="1187">3,3</td><td data-k="1188">4,0</td><td data-k="1189">2,6</td><td data-k="1190">2,8</td><td data-k="1191">3,0</td><td data-k="1192">2,6</td><td data-k="1193">3,2</td><td data-k="1194">3,6</td><td data-k="1195">3,0</td><td data-k="1196" class="now">3,0</td><td data-k="1197">3,3</td><td data-k="1198">3,3</td><td data-k="1199">3,4</td><td data-k="1200">3,9</td><td data-k="1201">3,6</td><td data-k="1202">4,1</td><td data-k="1203">3,6</td><td data-k="1204">3,3</td><td data-k="1205">3,8</td><td data-k="1206">3,9</td></tr><tr class=""><th>Hướng gió</th><td data-k="1186"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(302.53061632293634deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1187"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(309.2012424358269deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1188"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(315.47603045085947deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1189"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(323.60876166405734deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1190"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(314.25738768243093deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1191"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(319.3889330625176deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1192"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(311.95309609439323deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1193"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(308.4708864472584deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1194"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(310.98834359895307deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1195"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(308.72429195323934deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1196" class="now"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(312.57808809227174deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1197"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(312.87813682100733deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1198"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(306.52554081709167deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1199"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(306.11779401839595deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1200"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(306.84343002255633deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1201"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(302.69009297031033deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1202"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(301.0259724009057deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1203"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(285.35728072933927deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1204"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(293.9158115128585deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1205"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(304.9371686353601deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td><td data-k="1206"><svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(309.3173422138855deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"></path></svg></td></tr><tr class=""><th>Lớp biên BLH</th><td data-k="1186">240 m</td><td data-k="1187">325 m</td><td data-k="1188">286 m</td><td data-k="1189">316 m</td><td data-k="1190">300 m</td><td data-k="1191">286 m</td><td data-k="1192">313 m</td><td data-k="1193">298 m</td><td data-k="1194">313 m</td><td data-k="1195">343 m</td><td data-k="1196" class="now">345 m</td><td data-k="1197">342 m</td><td data-k="1198">367 m</td><td data-k="1199">319 m</td><td data-k="1200">322 m</td><td data-k="1201">310 m</td><td data-k="1202">379 m</td><td data-k="1203">468 m</td><td data-k="1204">455 m</td><td data-k="1205">420 m</td><td data-k="1206">393 m</td></tr></tbody></table></div>
+        <div class="gridwrap"><table class="mg" id="mg"><tbody></tbody></table></div>
       </div>
-      <aside id="sheetAbout"><h3>Thống kê tại điểm</h3><dl>
-      <dt>PM2.5 TB 4 năm</dt><dd>21,9 µg/m³</dd>
-      <dt>Số ngày &gt; 50 µg/m³</dt><dd>3 / 1348 ngày</dd>
-      <dt>Tỷ lệ trong AOA</dt><dd>99%</dd>
-      <dt>Trạm gần nhất</dt><dd>TAKY (1,2 km)</dd>
-      <dt>Giai đoạn</dt><dd>01/01/2023 – 15/09/2026</dd></dl>
-      <p style="font-size:9px;color:#64748b;margin-top:4px;line-height:1.25">
-        Mô hình CatBoost kết hợp AOD MAIAC/VIIRS và ERA5. Nhấp vào ngày trong bảng để xem chi tiết.
-      </p></aside>
+      <aside id="sheetAbout"></aside>
     </div>
   </section>
 
@@ -1493,27 +1341,27 @@
       <div class="kpi-grid">
         <div class="kpi-box">
           <div class="lbl">PM2.5 TRUNG BÌNH TOÀN THÀNH PHỐ</div>
-          <div class="val" style="color:#38bdf8">22,3 <span style="font-size:13px;color:var(--mute)">µg/m³</span></div>
-          <div style="font-size:11px;color:var(--mute);margin-top:2px">Đạt chuẩn QCVN 05:2023 (50 µg/m³)</div>
+          <div class="val">22,3 <span style="font-size:13px;color:var(--mute)">µg/m³</span></div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Đạt ngưỡng QCVN 05:2023 (50 µg/m³)</div>
         </div>
         <div class="kpi-box">
           <div class="lbl">TỶ LỆ ĐẠT CHUẨN WHO 2021</div>
-          <div class="val" style="color:#10b981">24,5%</div>
+          <div class="val">24,5%</div>
           <div style="font-size:11px;color:var(--mute);margin-top:2px">Nồng độ 24h &lt; 15 µg/m³</div>
         </div>
         <div class="kpi-box">
           <div class="lbl">TỶ LỆ ĐẠT CHUẨN QUỐC GIA</div>
-          <div class="val" style="color:#f59e0b">98,9%</div>
-          <div style="font-size:11px;color:var(--mute);margin-top:2px">Chỉ ~12 ngày vượt ngưỡng 50 µg/m³</div>
+          <div class="val">98,9%</div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Khoảng 12 ngày vượt ngưỡng 50 µg/m³</div>
         </div>
         <div class="kpi-box">
-          <div class="lbl">ĐỘ TIN CẬY MÔ HÌNH (AOA)</div>
-          <div class="val" style="color:#a855f7">99,2%</div>
-          <div style="font-size:11px;color:var(--mute);margin-top:2px">Thuộc miền áp dụng an toàn</div>
+          <div class="lbl">PHẠM VI ÁP DỤNG MÔ HÌNH (AOA)</div>
+          <div class="val">99,2%</div>
+          <div style="font-size:11px;color:var(--mute);margin-top:2px">Diện tích nằm trong miền tin cậy (DI &le; 0,342)</div>
         </div>
       </div>
 
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="background:var(--card-panel-bg);border:1px solid var(--line-subtle);border-radius:8px;padding:14px;margin-bottom:14px">
         <h3 style="font-size:14px;margin-bottom:6px">Chu Kỳ Biến Thiên 12 Tháng Tại Thành phố Đà Nẵng</h3>
         <p style="font-size:12px;color:var(--mute);margin-bottom:10px">Quy luật mùa: Đỉnh ô nhiễm vào tháng 4 (37,5 µg/m³) do gió mùa Tây Nam khô nóng và khói bụi cháy sinh khối; trong lành nhất vào tháng 10 (16,0 µg/m³) nhờ lượng mưa lớn rửa trôi.</p>
         <div id="seasonBars">
@@ -1600,15 +1448,15 @@
       <div class="modal-head" style="display:flex;align-items:center;gap:14px">
         <img src="logo_icon.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
         <div>
-          <h2>Kết Quả Kiểm Định Mô Hình AI So Với CAMS &amp; 2 Trạm Quan Trắc</h2>
-          <p>Đánh giá khách quan 5 mô hình Machine Learning qua 4 phương pháp kiểm định không gian - thời gian Meyer tại 2 trạm NGLB (Sư Phạm) và TAKY (Tam Kỳ).</p>
+          <h2>Kết Quả Kiểm Định Mô Hình Machine Learning So Với CAMS &amp; Trạm Quan Trắc</h2>
+          <p>Đối chiếu 5 mô hình hồi quy theo kiểm định không gian - thời gian Meyer (2021) tại 2 trạm NGLB (Sư Phạm) và TAKY (Tam Kỳ).</p>
         </div>
       </div>
 
       <div style="overflow-x:auto;margin-bottom:16px">
         <table style="width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums">
           <thead>
-            <tr style="background:rgba(255,255,255,0.05);color:var(--mute)">
+            <tr style="background:var(--thead-bg);color:var(--mute)">
               <th style="padding:8px;text-align:left">Mô hình</th>
               <th style="padding:8px;text-align:left">Kiểu kiểm định</th>
               <th style="padding:8px;text-align:left">R²</th>
@@ -1619,19 +1467,19 @@
             </tr>
           </thead>
           <tbody>
-            <tr style="background:rgba(2, 132, 199,0.15);font-weight:600">
+            <tr style="background:var(--row-hl-1);font-weight:600">
               <td style="padding:8px">CatBoost trực tiếp (Lựa chọn)</td>
               <td style="padding:8px">Random CV</td>
-              <td style="padding:8px;color:#10b981">0.697</td>
+              <td style="padding:8px;color:var(--good)">0.697</td>
               <td style="padding:8px">5.25</td>
               <td style="padding:8px">+0.11</td>
               <td style="padding:8px">0.688</td>
               <td style="padding:8px">0.711</td>
             </tr>
-            <tr style="background:rgba(2, 132, 199,0.1);font-weight:600">
+            <tr style="background:var(--row-hl-2);font-weight:600">
               <td style="padding:8px">CatBoost trực tiếp (Lựa chọn)</td>
               <td style="padding:8px">LTO (Ngoại suy thời gian)</td>
-              <td style="padding:8px;color:#10b981">0.682</td>
+              <td style="padding:8px;color:var(--good)">0.682</td>
               <td style="padding:8px">5.96</td>
               <td style="padding:8px">+1.26</td>
               <td style="padding:8px">0.694</td>
@@ -1677,7 +1525,7 @@
         </table>
       </div>
 
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:14px">
+      <div style="background:var(--card-panel-bg);border:1px solid var(--line-subtle);border-radius:8px;padding:14px">
         <h3 style="font-size:14px;margin-bottom:6px">Tầm Quan Trọng Của 13 Biến Đầu Vào</h3>
         <div id="featBars">
     <div class="bar-row" style="grid-template-columns:180px 1fr 60px">
@@ -1762,12 +1610,135 @@
     </div>
   </div>
 
+  <!-- MODAL: GIẢI THÍCH CHI TIẾT LỚP DỮ LIỆU (PM2.5, GIÓ, VÙNG TIN CẬY AOA) -->
+  <div class="modal-overlay" id="modalLayerInfo" hidden="">
+    <div class="modal-card" style="max-width:740px">
+      <button class="modal-close" id="closeLayerInfo" title="Đóng (Esc)">×</button>
+      <div class="modal-head" style="display:flex;align-items:center;gap:14px">
+        <img src="logo_icon.png" alt="Logo" style="height:42px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
+        <div>
+          <h2 id="layerInfoTitle">Giải Thích Phương Pháp &amp; Mô Hình Lớp Dữ Liệu</h2>
+          <p id="layerInfoSubtitle">Cơ sở khoa học, nguồn dữ liệu đầu vào và cơ chế tính toán trên lưới 1 km TP. Đà Nẵng</p>
+        </div>
+      </div>
+
+      <!-- Thanh chuyển đổi nhanh giữa 3 lớp dữ liệu -->
+      <div class="info-tab-bar">
+        <button type="button" class="info-tab-btn active" data-tab="pm25">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+          Bụi mịn PM2.5
+        </button>
+        <button type="button" class="info-tab-btn" data-tab="wind">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.8 19.6A2 2 0 1 0 14 16H2"></path><path d="M17.5 8a2.5 2.5 0 1 1 2 4H2"></path><path d="M9.8 4.4A2 2 0 1 1 11 8H2"></path></svg>
+          Gió (ERA5)
+        </button>
+        <button type="button" class="info-tab-btn" data-tab="aoa">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          Vùng tin cậy (AOA)
+        </button>
+      </div>
+
+      <!-- NỘI DUNG 1: BỤI MỊN PM2.5 -->
+      <div class="layer-info-pane" id="infoPane_pm25">
+        <div class="info-section-card">
+          <h3>1. Mô hình tính toán Bụi mịn PM2.5 như thế nào?</h3>
+          <p>Nồng độ bụi mịn mặt đất <b>PM<sub>2.5</sub> (µg/m³)</b> trung bình 24 giờ được tái cấu trúc không gian trên toàn bộ <b>9.861 ô lưới (độ phân giải 1 km × 1 km)</b> của TP. Đà Nẵng bằng mô hình học máy <b>CatBoost Direct Regression</b> (1.000 cây quyết định, độ sâu <code>depth = 5</code>, tốc độ học <code>0,05</code>).</p>
+          <div class="info-formula-box">
+            PM<sub>2.5 (1km, ngày t)</sub> = f<sub>CatBoost</sub>(CAMS, AOD<sub>550nm</sub>, ERA5<sub>T, RH, Gió, BLH</sub>, CHIRPS<sub>Mưa</sub>, FIRMS<sub>Cháy</sub>, sin/cos DOY)
+          </div>
+          <p>Thay vì chỉ nội suy hình học đơn thuần giữa các trạm, mô hình học mối quan hệ vật lý - quang học phi tuyến giữa dữ liệu thực đo tại 2 trạm chuẩn <b>NGLB (ĐH Sư Phạm)</b> và <b>TAKY (Tam Kỳ)</b> với các biến vệ tinh và khí tượng trên từng ô lưới 1 km.</p>
+        </div>
+
+        <div class="info-section-card">
+          <h3>2. Hệ thống 13 biến đầu vào đa nguồn &amp; Tỷ trọng đóng góp</h3>
+          <ul>
+            <li><b>Tái phân tích vệ tinh &amp; Quang học sol khí (29,4%):</b> Nồng độ nền CAMS PM<sub>2.5</sub> của Châu Âu (<b>18,6%</b>), Độ dày quang học sol khí hợp nhất AOD 550nm từ vệ tinh MODIS Terra/Aqua + VIIRS + CAMS (<b>7,8%</b>) và cờ nguồn cảm biến (<b>3,0%</b>).</li>
+            <li><b>Chu kỳ mùa trong năm (27,3%):</b> Hai thành phần điều hòa <code>cos(DOY)</code> (<b>14,7%</b>) và <code>sin(DOY)</code> (<b>12,5%</b>) nắm bắt quy luật biến thiên mùa khô - mùa mưa đặc trưng của miền Trung.</li>
+            <li><b>Khí tượng tái phân tích ERA5 &amp; Mưa vệ tinh CHIRPS (33,7%):</b> Độ ẩm tương đối RH (<b>9,9%</b>), Nhiệt độ mặt đất 2m (<b>9,7%</b>), Vận tốc gió 10m (<b>6,4%</b>), Chiều cao lớp biên khí quyển BLH (<b>6,3%</b>) và Lượng mưa vệ tinh CHIRPS (<b>1,4%</b>).</li>
+            <li><b>Nguồn phát thải cháy sinh khối NASA FIRMS (9,7%):</b> Số điểm dị thường nhiệt (đốt rơm rạ, cháy rừng) trong bán kính 500 km (<b>7,0%</b>), 200 km (<b>1,7%</b>) và 100 km (<b>1,0%</b>).</li>
+          </ul>
+        </div>
+
+        <div class="info-section-card" style="margin-bottom:0">
+          <h3>3. Độ chính xác kiểm định &amp; Quy chuẩn hiển thị</h3>
+          <p>Mô hình đạt hệ số xác định <b>R² = 0,697</b> (RMSE = 5,25 µg/m³) theo kiểm định chéo ngẫu nhiên (Random CV) và <b>R² = 0,682</b> theo kiểm định ngoại suy thời gian (LTO), vượt trội hoàn toàn so với dữ liệu vệ tinh CAMS gốc khi chưa hiệu chỉnh (R² = 0,183). Giá trị hiển thị được đối chiếu trực tiếp với quy chuẩn <b>QCVN 05:2023/BTNMT</b> (ngưỡng giới hạn trung bình 24h là <b>50 µg/m³</b>) và khuyến nghị của <b>WHO (15 µg/m³)</b>.</p>
+        </div>
+      </div>
+
+      <!-- NỘI DUNG 2: GIÓ (ERA5) -->
+      <div class="layer-info-pane" id="infoPane_wind" hidden="">
+        <div class="info-section-card">
+          <h3>1. Dữ liệu Gió được tính từ đâu và công thức như thế nào?</h3>
+          <p>Trường gió được trích xuất từ hệ thống tái phân tích khí quyển toàn cầu <b>ECMWF ERA5</b> ở độ cao tiêu chuẩn <b>10 mét trên mặt đất</b>, tính trung bình ngày 24h theo múi giờ địa phương (UTC+7) và nội suy song tuyến tính (bilinear interpolation) xuống từng ô lưới 1 km.</p>
+          <p>Từ 2 thành phần véc-tơ: <b>u<sub>10</sub></b> (gió vĩ tuyến Tây → Đông) và <b>v<sub>10</sub></b> (gió kinh tuyến Nam → Bắc), vận tốc gió tổng hợp <b>W (m/s)</b> và hướng gió khí tượng <b>θ (độ)</b> được tính theo công thức:</p>
+          <div class="info-formula-box">
+            W = √(u<sub>10</sub>² + v<sub>10</sub>²) &nbsp;(m/s) &nbsp;&nbsp;|&nbsp;&nbsp; θ = atan2(-u<sub>10</sub>, -v<sub>10</sub>) × (180° / π)
+          </div>
+        </div>
+
+        <div class="info-section-card">
+          <h3>2. Gió được thể hiện trên bản đồ như thế nào?</h3>
+          <ul>
+            <li><b>Luồng hạt động (Dynamic Streamlines):</b> Hàng nghìn hạt sáng chuyển động mượt trên màn hình theo trường véc-tơ (u<sub>10</sub>, v<sub>10</sub>) của ngày đang chọn.</li>
+            <li><b>Hướng &amp; Tốc độ trực quan:</b> Chiều di chuyển của hạt biểu thị hướng gió đang thổi; <b>tốc độ hạt trôi và độ dài đuôi vệt sáng</b> tỷ lệ thuận với vận tốc gió thực tế (m/s). Trong bảng chi tiết điểm dưới đáy màn hình, mũi tên chỉ hướng gió đi kèm ký hiệu 8 hướng chuẩn (B, ĐB, Đ, ĐN, N, TN, T, TB).</li>
+          </ul>
+        </div>
+
+        <div class="info-section-card" style="margin-bottom:0">
+          <h3>3. Gió ảnh hưởng gì tới nồng độ Bụi mịn PM2.5?</h3>
+          <p>Vận tốc gió đóng góp <b>6,4%</b> độ quan trọng trong mô hình CatBoost và chi phối trực tiếp quá trình phát tán bụi mịn tại Đà Nẵng qua 3 cơ chế vật lý:</p>
+          <ul>
+            <li><b>Khuếch tán &amp; Làm sạch không khí:</b> Khi gió biển (Đông / Đông Nam) thổi mạnh (&gt; 3,0 m/s), luồng không khí sạch từ đại dương giúp pha loãng nhanh và đẩy chất ô nhiễm ra khỏi khu vực đô thị, làm giảm mạnh PM<sub>2.5</sub>.</li>
+            <li><b>Tích tụ cục bộ khi gió lặng:</b> Khi gió yếu (&lt; 1,5 m/s) kết hợp với chiều cao lớp biên khí quyển (BLH) thấp và nghịch nhiệt bức xạ, bụi mịn từ giao thông và công nghiệp bị giam giữ sát mặt đất, gây ra các đợt ô nhiễm cao điểm.</li>
+            <li><b>Vận chuyển ô nhiễm xuyên biên giới / liên vùng:</b> Gió mùa Đông Bắc hoặc gió Tây Bắc có thể mang theo bụi mịn và khói đốt sinh khối (từ bán kính 100–500 km) xâm nhập vào địa phận thành phố.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- NỘI DUNG 3: VÙNG TIN CẬY (AOA) -->
+      <div class="layer-info-pane" id="infoPane_aoa" hidden="">
+        <div class="info-section-card">
+          <h3>1. Vùng tin cậy (AOA - Area of Applicability) là gì?</h3>
+          <p><b>AOA (Miền ứng dụng tin cậy)</b> được xây dựng theo phương pháp chuẩn quốc tế của <b>Meyer &amp; Pebesma (2021)</b> (<i>Methods in Ecology and Evolution</i>). Vì mô hình học máy chỉ được huấn luyện tại 2 trạm mặt đất (NGLB và TAKY), AOA giúp trả lời câu hỏi: <i>"Tại ô lưới 1 km này vào ngày hôm nay, các điều kiện môi trường có nằm trong phạm vi mà mô hình đã được học và dự báo đáng tin cậy hay không?"</i></p>
+        </div>
+
+        <div class="info-section-card">
+          <h3>2. AOA được tính toán như thế nào?</h3>
+          <p>Quy trình tính toán AOA cho từng ô lưới 1 km vào mỗi ngày gồm 3 bước toán học chặt chẽ:</p>
+          <ul>
+            <li><b>Bước 1 – Chuẩn hóa không gian đặc trưng có trọng số (Z):</b> Mỗi biến đầu vào X<sub>j</sub> được chuẩn hóa theo trung bình (μ<sub>j</sub>) và độ lệch chuẩn (σ<sub>j</sub>) của tập huấn luyện, sau đó nhân với trọng số quan trọng w<sub>j</sub> của biến đó trong mô hình CatBoost:</li>
+          </ul>
+          <div class="info-formula-box">
+            Z<sub>j</sub> = [ (X<sub>j</sub> - μ<sub>j</sub>) / σ<sub>j</sub> ] × w<sub>j</sub>
+          </div>
+          <ul>
+            <li><b>Bước 2 – Tính Chỉ số Khác biệt (Dissimilarity Index - DI):</b> Đo khoảng cách Euclid từ điểm lưới dự báo (Z<sub>new</sub>) đến mẫu huấn luyện gần nhất (Z<sub>i</sub>), chia cho khoảng cách trung bình giữa mọi cặp điểm huấn luyện (d̄<sub>train</sub> = 0,5098):</li>
+          </ul>
+          <div class="info-formula-box">
+            DI<sub>new</sub> = min<sub>i ∈ train</sub> || Z<sub>new</sub> - Z<sub>i</sub> ||₂ / d̄<sub>train</sub>
+          </div>
+          <ul>
+            <li><b>Bước 3 – So sánh với ngưỡng cắt kiểm định chéo (DI<sub>threshold</sub> = 0,342):</b> Ngưỡng được xác định từ kiểm định rút gọn trạm (Leave-Location-Out CV) theo công thức hàng rào Tukey: <code>Q₃ + 1,5 × IQR = 0,342</code>.</li>
+          </ul>
+        </div>
+
+        <div class="info-section-card" style="margin-bottom:0">
+          <h3>3. Ý nghĩa hiển thị trên bản đồ</h3>
+          <ul>
+            <li><b style="color:#10b981">Trong vùng tin cậy (DI ≤ 0,342 – Hiển thị trong suốt):</b> Điều kiện khí tượng, quang học và địa hình tương đồng với 2 trạm chuẩn (khu vực đồng bằng ven biển, nội đô Đà Nẵng, Tam Kỳ, thung lũng thấp). Mô hình thực hiện <b>nội suy (interpolation)</b> với độ tin cậy cao.</li>
+            <li><b style="color:#ef4444">Ngoài vùng tin cậy (DI &gt; 0,342 – Phủ lớp cảnh báo sẫm màu):</b> Thường rơi vào vùng núi cao hiểm trở phía Tây (Nam Giang, Tây Giang, Phước Sơn) hoặc ngày có dị thường khói/khí quyển vượt xa tập mẫu trạm. Mô hình phải <b>ngoại suy (extrapolation)</b> nên được phủ lớp mặt nạ cảnh báo để người dùng lưu ý.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- LOADING SPINNER -->
-  <div id="loading" hidden="">
+  <div id="loading">
     <div style="text-align:center;max-width:360px;padding:24px">
       <img src="logo.png" alt="AIR-URBAN LAB" style="height:62px;width:auto;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.85)) drop-shadow(0 0 2px rgba(255,255,255,0.45));margin-bottom:16px;display:inline-block">
       <div class="spinner"></div>
-      <b style="font-size:15px;color:#fff;display:block;margin-top:6px">Đang Tải Bản Đồ PM2.5 Đà Nẵng</b>
+      <b style="font-size:15px;color:var(--ink-strong);display:block;margin-top:6px">Đang Tải Bản Đồ PM2.5 Đà Nẵng</b>
       <div style="font-size:12px;color:var(--mute);margin-top:8px" id="prog">Khởi tạo không gian bản đồ và lưới 1 km...</div>
     </div>
   </div>
@@ -2250,7 +2221,7 @@
     }
   });
 
-  const gridLinesLayer = new GridLinesLayer({ variant: 'clipped', color: 'rgba(100, 116, 139, 0.75)' }).addTo(map);
+  const gridLinesLayer = new GridLinesLayer({ variant: 'clipped', color: 'rgba(148, 163, 184, 0.35)' });
 
   // chkGrid handled by bindLayerToggle below
 
@@ -2337,11 +2308,56 @@
   }
 
   /* UNIFIED LAYER TOGGLE CONTROLLER (CLICK ON PILL TOGGLES ON & OFF RELIABLY) */
+  function openLayerInfoModal(topic) {
+    const titles = {
+      pm25: [
+        'Giải Thích Lớp Dữ Liệu: Bụi Mịn PM2.5',
+        'Phương pháp tái cấu trúc không gian 1 km bằng mô hình học máy CatBoost Direct Regression'
+      ],
+      wind: [
+        'Giải Thích Lớp Dữ Liệu: Trường Gió Khí Quyển (ERA5)',
+        'Nguồn dữ liệu tái phân tích ECMWF ERA5, cách biểu diễn hạt động và cơ chế tác động tới bụi mịn'
+      ],
+      aoa: [
+        'Giải Thích Lớp Dữ Liệu: Vùng Tin Cậy (Area of Applicability - AOA)',
+        'Phương pháp định lượng miền ứng dụng tin cậy của mô hình theo Meyer & Pebesma (2021)'
+      ]
+    };
+    const t = titles[topic] || titles.pm25;
+    $('layerInfoTitle').textContent = t[0];
+    $('layerInfoSubtitle').textContent = t[1];
+
+    document.querySelectorAll('#modalLayerInfo .info-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === topic);
+    });
+    ['pm25', 'wind', 'aoa'].forEach(k => {
+      const pane = $('infoPane_' + k);
+      if (pane) pane.hidden = (k !== topic);
+    });
+    openModal('modalLayerInfo');
+  }
+
+  document.querySelectorAll('.layer-info-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const topic = this.getAttribute('data-layer-info') || 'pm25';
+      openLayerInfoModal(topic);
+    });
+  });
+
+  document.querySelectorAll('#modalLayerInfo .info-tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      openLayerInfoModal(this.getAttribute('data-tab'));
+    });
+  });
+
   function bindLayerToggle(pillId, chkId, callback) {
     const pill = $(pillId);
     const chk = $(chkId);
     if (!pill || !chk) return;
     pill.onclick = function(e) {
+      if (e.target && e.target.closest && e.target.closest('.layer-info-btn')) return;
       e.preventDefault();
       e.stopPropagation();
       chk.checked = !chk.checked;
@@ -2849,7 +2865,7 @@
       const targetTime = Date.UTC(+parts[0], +parts[1] - 1, +parts[2]);
       const targetDay = Math.round((targetTime - T0) / 86400000);
       if (targetDay < 0 || targetDay >= N) {
-        showToast(`⚠️ Dữ liệu chỉ khả dụng từ ngày <b>${fmtD(dayDate(0))}</b> đến <b>${fmtD(dayDate(N - 1))}</b>. Vui lòng chọn ngày trong khoảng này!`);
+        showToast(`Dữ liệu chỉ khả dụng từ ngày <b>${fmtD(dayDate(0))}</b> đến <b>${fmtD(dayDate(N - 1))}</b>.`);
         $('datePickerInput').value = fmtISO(dayDate(day));
         return;
       }
@@ -2999,7 +3015,7 @@
   }
 
   const f1 = x => (x >= 0 || x < 0) ? x.toFixed(1).replace('.', ',') : '—';
-  const arrowSVG = deg => `<svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(${deg}deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="#111a24"/></svg>`;
+  const arrowSVG = deg => `<svg class="arrow" viewBox="0 0 14 14" style="transform:rotate(${deg}deg)"><path d="M7 1l4 7H8v5H6V8H3z" fill="currentColor"/></svg>`;
 
   function renderSheet() {
     if (sel < 0) return;
@@ -3013,7 +3029,7 @@
     if (activeStationCode && STATIONS[activeStationCode]) {
       const st = STATIONS[activeStationCode];
       $('sTitle').textContent = `Trạm ${st.name} (${st.lat.toFixed(6)}°N, ${st.lon.toFixed(6)}°E)`;
-      $('sSub').textContent = `${st.address} · Vị trí trạm quan trắc chuẩn 100%`;
+      $('sSub').textContent = `${st.address} · Trạm quan trắc mặt đất`;
     } else {
       $('sTitle').textContent = `TP. Đà Nẵng (${S.la.toFixed(3)}°N, ${S.lo.toFixed(3)}°E)`;
       $('sSub').textContent = `Ô lưới 1 km · Cách ${near[2]} ${near[1].toFixed(1).replace('.', ',')} km`;
@@ -3073,8 +3089,8 @@
       <dt>Tỷ lệ trong AOA</dt><dd>${Math.round(S.aoa * 100)}%</dd>
       <dt>${activeStationCode ? 'Trạm quan sát' : 'Trạm gần nhất'}</dt><dd>${activeStationCode ? STATIONS[activeStationCode].name + ' (tại trạm)' : near[0] + ' (' + near[1].toFixed(1).replace('.', ',') + ' km)'}</dd>
       <dt>Giai đoạn</dt><dd>${fmtD(dayDate(0))} – ${fmtD(dayDate(N - 1))}</dd></dl>
-      <p style="font-size:9px;color:#64748b;margin-top:4px;line-height:1.25">
-        Mô hình CatBoost kết hợp AOD MAIAC/VIIRS và ERA5. Nhấp vào ngày trong bảng để xem chi tiết.
+      <p style="font-size:9.5px;color:var(--mute);margin-top:6px;line-height:1.3">
+        Tái cấu trúc PM2.5 từ mô hình CatBoost (AOD MAIAC/VIIRS và ERA5). Nhấp vào ngày trong bảng để đối chiếu.
       </p>`;
 
     drawSpark(S);
@@ -3092,11 +3108,20 @@
     const X = k => L + (w - L - R) * k / (N - 1);
     const Y = v => T + (h - T - B) * (1 - v / ymax);
 
-    g.font = '8px "IBM Plex Mono", monospace';
-    g.fillStyle = '#64748b';
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const cWho = isLight ? '#059669' : '#10b981';
+    const cQcvn = isLight ? '#dc2626' : '#f87171';
+    const cYearText = isLight ? '#64748b' : '#8b97a6';
+    const cYearGrid = isLight ? 'rgba(15, 23, 42, 0.12)' : 'rgba(255, 255, 255, 0.08)';
+    const cLine = isLight ? '#1e293b' : '#cbd5e1';
+    const cCursor = isLight ? '#0284c7' : '#38bdf8';
+    const cCursorBand = isLight ? 'rgba(2, 132, 199, 0.18)' : 'rgba(56, 189, 248, 0.22)';
+    const cDotStroke = isLight ? '#0f172a' : '#f8fafc';
+
+    g.font = '8.5px Inter, sans-serif';
     g.textBaseline = 'middle';
 
-    for (const [v, lab, col] of [[15, 'WHO 15', '#059669'], [50, 'QCVN 50', '#dc2626']]) {
+    for (const [v, lab, col] of [[15, 'WHO 15', cWho], [50, 'QCVN 50', cQcvn]]) {
       if (v > ymax) continue;
       g.strokeStyle = col; g.setLineDash([3, 2]);
       g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(w - R, Y(v)); g.stroke();
@@ -3106,12 +3131,14 @@
     for (let y = 0; y < N; y++) {
       const d = dayDate(y);
       if (d.getUTCMonth() === 0 && d.getUTCDate() === 1) {
+        g.fillStyle = cYearText;
         g.fillText(d.getUTCFullYear(), X(y) + 2, h - 3);
+        g.fillStyle = cYearGrid;
         g.fillRect(X(y), T, 1, h - T - B);
       }
     }
 
-    g.strokeStyle = '#1e293b'; g.lineWidth = 1;
+    g.strokeStyle = cLine; g.lineWidth = 1.1;
     g.beginPath();
     let pen = false;
     for (let k = 0; k < N; k++) {
@@ -3123,14 +3150,14 @@
     g.stroke();
 
     const x = X(day);
-    g.fillStyle = 'rgba(2, 132, 199, 0.25)';
+    g.fillStyle = cCursorBand;
     g.fillRect(x - 3, T, 6, h - T - B);
-    g.fillStyle = '#0284c7';
+    g.fillStyle = cCursor;
     g.fillRect(x - 1, T, 2, h - T - B);
     const v = S.v[day];
     if (v >= 0) {
-      g.fillStyle = css(v); g.strokeStyle = '#111a24';
-      g.beginPath(); g.arc(x, Y(v), 4.5, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = css(v); g.strokeStyle = cDotStroke;
+      g.beginPath(); g.arc(x, Y(v), 4, 0, 7); g.fill(); g.stroke();
     }
 
     spark.onclick = e => {
@@ -3147,10 +3174,36 @@
   }
   function closeModal(id) { $(id).hidden = true; }
 
+  /* LIGHT / DARK THEME TOGGLE (LIGHT DEFAULT) */
+  const SUN_SVG = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>';
+  const MOON_SVG = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  function applyTheme(theme) {
+    const t = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('dn_pm25_theme', t); } catch (_) {}
+    const lbl = $('themeLabel'), ico = $('themeIcon');
+    if (lbl) lbl.textContent = t === 'light' ? 'Sáng' : 'Tối';
+    if (ico) ico.innerHTML = t === 'light' ? SUN_SVG : MOON_SVG;
+    if (sel >= 0 && !sheet.classList.contains('collapsed') && cache && cache.c >= 0) {
+      drawSpark(cache);
+    }
+  }
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+  $('btnTheme').onclick = () => {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+  };
+
   $('btnDashboard').onclick = () => openModal('modalDashboard');
   $('btnValidation').onclick = () => openModal('modalValidation');
   $('closeDashboard').onclick = () => closeModal('modalDashboard');
   $('closeValidation').onclick = () => closeModal('modalValidation');
+  $('closeLayerInfo').onclick = () => closeModal('modalLayerInfo');
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => {
+      if (e.target === ov) ov.hidden = true;
+    });
+  });
 
   const SEASON_DATA = [
     { m: 'Tháng 1', v: 28.58, color: '#f59e0b' },
