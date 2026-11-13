@@ -1133,6 +1133,79 @@
       padding: 5px 11px !important;
       letter-spacing: -0.01em !important;
     }
+  </style>
+  <!-- MINIMAL UI OVERRIDE: flat surfaces, hairline borders, no glow, colour only where it carries data -->
+  <style id="minimal-ui-override">
+    :root {
+      --m-surface: rgba(17, 24, 33, 0.92);
+      --m-surface-hover: rgba(30, 40, 52, 0.95);
+      --m-line: rgba(255, 255, 255, 0.10);
+      --m-text: #e5e9ef;
+      --m-text-dim: #8b97a6;
+      --m-accent: #38bdf8;
+    }
+    .glass { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: 0 1px 2px rgba(0,0,0,.35) !important; border-radius: 8px !important; }
+
+    /* Top pills: flat, no glow */
+    .station-btn, .nav-pill {
+      background: var(--m-surface) !important; border: 1px solid var(--m-line) !important;
+      color: var(--m-text-dim) !important; border-radius: 6px !important; box-shadow: none !important;
+      padding: 5px 11px !important; font-size: 12px !important; transition: color .15s, border-color .15s !important;
+    }
+    .station-btn:hover, .nav-pill:hover { background: var(--m-surface-hover) !important; border-color: rgba(255,255,255,.22) !important; color: var(--m-text) !important; }
+    .station-btn.active, .nav-pill.active { background: var(--m-surface) !important; color: #fff !important; border-color: var(--m-accent) !important; box-shadow: none !important; }
+    .search-input { border-radius: 6px !important; box-shadow: none !important; background: var(--m-surface) !important; }
+
+    /* Layer panel: plain rows instead of glowing pills */
+    .layer-item-check { background: transparent !important; border: none !important; border-radius: 4px !important; padding: 6px 4px !important; margin-bottom: 2px !important; box-shadow: none !important; }
+    .layer-item-check:hover { background: rgba(255,255,255,.05) !important; }
+    .layer-item-check.active { background: transparent !important; box-shadow: none !important; }
+    .layer-item-check .pill-badge { width: 22px !important; height: 22px !important; background: transparent !important; color: var(--m-text-dim) !important; box-shadow: none !important; margin-right: 6px !important; }
+    .layer-item-check.active .pill-badge { background: transparent !important; color: var(--m-accent) !important; box-shadow: none !important; }
+    .layer-item-check .pill-label { color: var(--m-text-dim) !important; font-weight: 500 !important; }
+    .layer-item-check.active .pill-label { color: var(--m-text) !important; font-weight: 500 !important; }
+    .basemap-box .layer-item-check { border-top: none !important; }
+    .jump-chip { border-radius: 6px !important; box-shadow: none !important; }
+
+    /* Bottom sheet: one flat surface, hairlines only */
+    #sheet { background: #ffffff !important; border: none !important; border-top: 1px solid #e5e7eb !important; border-radius: 0 !important; box-shadow: 0 -1px 0 rgba(0,0,0,.04), 0 -6px 16px rgba(0,0,0,.08) !important; }
+    .sheet-resizer { height: 8px !important; background: #fff !important; border: none !important; }
+    .sheet-resizer:hover, #sheet.dragging .sheet-resizer { background: #f3f4f6 !important; }
+    .sheet-resizer-pill, .sheet-resizer:hover .sheet-resizer-pill, #sheet.dragging .sheet-resizer-pill { width: 32px !important; height: 3px !important; background: #d1d5db !important; }
+    #sheet .bar { background: #fff !important; border-bottom: 1px solid #f0f1f3 !important; padding: 6px 14px !important; }
+    #closeSheet { background: transparent !important; color: #6b7280 !important; border: 1px solid #e5e7eb !important; border-radius: 6px !important; font-size: 15px !important; }
+    #closeSheet:hover { color: #111827 !important; border-color: #d1d5db !important; }
+    #sTitle { font-weight: 600 !important; color: #111827 !important; }
+    #sSub { color: #6b7280 !important; }
+    #sheet .bar .jump-chip { background: transparent !important; border: 1px solid #e5e7eb !important; color: #374151 !important; border-radius: 6px !important; font-weight: 500 !important; }
+    #sheet .bar .jump-chip:hover { border-color: #9ca3af !important; color: #111827 !important; }
+    #sheet .body { padding: 8px 14px 8px !important; gap: 20px !important; }
+    #spark { border: none !important; border-bottom: 1px solid #f0f1f3 !important; border-radius: 0 !important; }
+    .gridwrap { border: none !important; border-radius: 0 !important; }
+
+    table.mg { font-size: 10.5px !important; }
+    table.mg th { color: #6b7280 !important; font-weight: 500 !important; border-right: none !important; padding: 2px 10px 2px 0 !important; }
+    table.mg td { border-left: none !important; padding: 2px 3px !important; color: #374151; }
+    table.mg tr + tr th, table.mg tr + tr td { border-top: 1px solid #f3f4f6; }
+    table.mg tr.month td { background: transparent !important; color: #6b7280 !important; font-weight: 500 !important; }
+    table.mg tr.day td { color: #9ca3af !important; }
+    table.mg tr.day td b { color: #111827 !important; font-weight: 600 !important; }
+    table.mg td.now { background: #f3f4f6 !important; box-shadow: inset 0 2px 0 #111827; }
+    table.mg td:hover { background: #f9fafb; }
+
+    /* PM2.5: plain number with a thin colour bar instead of a filled badge */
+    .chip { background: none !important; color: #111827 !important; font-weight: 600 !important; border-radius: 0 !important; padding: 0 2px 1px !important; border-bottom: 3px solid var(--c, #d1d5db); }
+    .aoa-in { color: #9ca3af; }
+    .aoa-out { color: #dc2626; font-weight: 600; }
+    .rain { color: #2563eb; }
+    .muted { color: #d1d5db; }
+
+    #sheetAbout { width: 210px !important; border-left: 1px solid #f0f1f3; padding: 2px 0 2px 16px !important; }
+    #sheetAbout h3 { font-size: 10px !important; font-weight: 600 !important; color: #6b7280 !important; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px !important; }
+    #sheetAbout dl { gap: 4px 8px !important; }
+    #sheetAbout dt { color: #6b7280 !important; }
+    #sheetAbout dd { color: #111827 !important; font-weight: 600 !important; }
+    #sheetAbout p { color: #9ca3af !important; }
   </style></head>
 <body class="">
 
@@ -2966,17 +3039,17 @@
       + row('Ngày', k => { const d = dayDate(k); return THU_NGAN[d.getUTCDay()] + '<b>' + pad(d.getUTCDate()) + '</b>'; }, 'day')
       + row('PM2.5 µg/m³', k => {
           const v = pmAt(k, sel);
-          return v >= 0 ? `<span class="chip" style="background:${css(v)};color:${inkOn(v)}">${f1(v)}</span>` : '—';
+          return v >= 0 ? `<span class="chip" style="--c:${css(v)}">${f1(v)}</span>` : '—';
         })
       + row('AOA (Tin cậy)', k => {
           const a = aoaAt(k, sel);
-          return a === 1 ? '<span style="color:#10b981;font-weight:600">Trong</span>' : a === 0 ? '<span style="color:#ef4444;font-weight:600">Ngoài</span>' : '—';
+          return a === 1 ? '<span class="aoa-in">Trong</span>' : a === 0 ? '<span class="aoa-out">Ngoài</span>' : '—';
         })
       + row('Nhiệt độ °C', k => f1(eraAt(k, S.wE, 0) / 100))
       + row('Độ ẩm %', k => Math.round(eraAt(k, S.wE, 1) / 10))
       + row('Mưa mm', k => {
           const r = rainAt(k, S.wR);
-          return r >= 0.05 ? `<span style="color:#0284c7;font-weight:600">${f1(r)}</span>` : '<span style="color:#94a3b8">0</span>';
+          return r >= 0.05 ? `<span class="rain">${f1(r)}</span>` : '<span class="muted">0</span>';
         })
       + row('Gió m/s', k => f1(eraAt(k, S.wE, 2) / 100))
       + row('Hướng gió', k => {
