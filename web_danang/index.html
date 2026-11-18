@@ -1273,14 +1273,14 @@
       </svg>
       <span>Đỉnh ô nhiễm</span>
     </button>
-      <button class="jump-chip" id="btnJumpMin" title="Chuyển đến ngày trong lành nhất (07/03/2025)">
+      <button class="jump-chip" id="btnJumpMin" title="Chuyển đến ngày trong lành nhất (03/04/2022)">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
         <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
         <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
       </svg>
       <span>Trong lành nhất</span>
     </button>
-      <input type="date" id="datePickerInput" min="2023-01-01" max="2026-09-15" title="Chọn ngày trong khoảng 01/01/2023 – 15/09/2026">
+      <input type="date" id="datePickerInput" min="2022-01-01" max="2026-09-30" title="Chọn ngày trong khoảng 01/01/2022 – 30/09/2026">
     </div>
 
     <div id="track" role="slider" tabindex="0" aria-label="Chọn ngày">
@@ -1319,7 +1319,7 @@
     </div>
     <div class="body">
       <div class="left">
-        <canvas id="spark" aria-label="Chuỗi thời gian 4 năm" width="2529" height="57"></canvas>
+        <canvas id="spark" aria-label="Chuỗi thời gian 5 năm" width="2529" height="57"></canvas>
         <div class="gridwrap"><table class="mg" id="mg"><tbody></tbody></table></div>
       </div>
       <aside id="sheetAbout"></aside>
@@ -1334,7 +1334,7 @@
         <img src="logo_icon.png" alt="Logo" style="height:44px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));flex-shrink:0">
         <div>
           <h2>Phân Tích Chất Lượng Không Khí Bụi Mịn PM<sub>2.5</sub> Thành phố Đà Nẵng</h2>
-          <p>Phân tích tổng hợp toàn bộ 9.861 ô lưới 1 km trên địa bàn Thành phố Đà Nẵng (hợp nhất toàn vùng) suốt 1.354 ngày từ 2023 đến 2026.</p>
+          <p>Phân tích tổng hợp toàn bộ 9.861 ô lưới 1 km trên địa bàn Thành phố Đà Nẵng (hợp nhất toàn vùng) suốt 1.734 ngày từ 2022 đến 2026.</p>
         </div>
       </div>
 
@@ -1761,7 +1761,7 @@
       if (r.ok) {
         const ab = await r.arrayBuffer();
         nLoaded++;
-        prog.textContent = 'Đang nạp dữ liệu: ' + nLoaded + ' / 12 tệp hoàn tất';
+        prog.textContent = 'Đang nạp dữ liệu: ' + nLoaded + ' / 14 tệp hoàn tất';
         return ab;
       }
     } catch(e) {}
@@ -1777,7 +1777,7 @@
       out = await new Response(s).arrayBuffer();
     }
     nLoaded++;
-    prog.textContent = 'Đang nạp dữ liệu: ' + nLoaded + ' / 12 tệp hoàn tất';
+    prog.textContent = 'Đang nạp dữ liệu: ' + nLoaded + ' / 14 tệp hoàn tất';
     return out;
   }
 
@@ -1793,7 +1793,7 @@
       if (geoRes.ok) daNangGeoJson = await geoRes.json();
     } catch (_) {}
     nLoaded = 2;
-    prog.textContent = 'Đang nạp dữ liệu: 2 / 12 tệp...';
+    prog.textContent = 'Đang nạp dữ liệu: 2 / 14 tệp...';
   } catch(e) {
     prog.innerHTML = '<span style="color:#ef4444">Lỗi: ' + e.message + '<br>Hãy đảm bảo khởi chạy bằng python chay_web.py</span>';
     return;
@@ -2850,8 +2850,8 @@
     if (timer) { stop(); play(); }
   };
 
-  $('btnJumpMax').onclick = () => { stop(); setDay(1196, true); }; // 11/04/2026: Đỉnh ô nhiễm 57.4 ug/m3
-  $('btnJumpMin').onclick = () => { stop(); setDay(796, true); };  // 07/03/2025: Trong lành nhất 9.8 ug/m3
+  $('btnJumpMax').onclick = () => { stop(); setDay(1561, true); }; // 11/04/2026: đỉnh PM2.5 TB toàn vùng (chỉ số ngày tính từ 01/01/2022)
+  $('btnJumpMin').onclick = () => { stop(); setDay(92, true); };  // 03/04/2022: trong lành nhất, PM2.5 TB toàn vùng 9.6 ug/m3 (chỉ số từ 01/01/2022)
   
   const minDateStr = fmtISO(dayDate(0));
   const maxDateStr = fmtISO(dayDate(N - 1));
@@ -3085,7 +3085,7 @@
     }
 
     $('sheetAbout').innerHTML = `<h3>Thống kê tại điểm</h3><dl>
-      <dt>PM2.5 TB 4 năm</dt><dd>${f1(S.mean)} µg/m³</dd>
+      <dt>PM2.5 TB 5 năm</dt><dd>${f1(S.mean)} µg/m³</dd>
       <dt>Số ngày > 50 µg/m³</dt><dd>${S.over} / ${S.n} ngày</dd>
       <dt>Tỷ lệ trong AOA</dt><dd>${Math.round(S.aoa * 100)}%</dd>
       <dt>${activeStationCode ? 'Trạm quan sát' : 'Trạm gần nhất'}</dt><dd>${activeStationCode ? STATIONS[activeStationCode].name + ' (tại trạm)' : near[0] + ' (' + near[1].toFixed(1).replace('.', ',') + ' km)'}</dd>
@@ -3270,7 +3270,7 @@
   });
 
   /* STARTUP */
-  setDay(1196, true); // Start at peak day (11/04/2026: 57.4 ug/m3)
+  setDay(1561, true); // Start at peak day 11/04/2026 (index from 2022-01-01)
   $('loading').hidden = true;
   toggleWind();
 
