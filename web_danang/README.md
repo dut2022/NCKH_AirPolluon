@@ -8,7 +8,7 @@ Last Updated: November 2026
 ## 1. Purpose & Scope
 
 ### 1.1 Purpose
-This interactive web GIS platform visualizes high-resolution daily ground-level particulate matter ($\text{PM}_{2.5}$) concentrations at a **1 km grid resolution** across the entire unified territory of **Da Nang City** from **January 1, 2023 to September 15, 2026 (1,354 continuous days)**.
+This interactive web GIS platform visualizes high-resolution daily ground-level particulate matter ($\text{PM}_{2.5}$) concentrations at a **1 km grid resolution** across the entire unified territory of **Da Nang City** from **January 1, 2022 to September 30, 2026 (1,734 continuous days)**.
 
 The interface combines:
 - Official brand identity icon mark (`logo.jpg` from `Logo/05_Original_Icon_Mark_1024x1024.jpg`) integrated into header badge, browser favicon, modal heads, and loading screen.
@@ -23,7 +23,7 @@ The interface combines:
 - **Monitoring Stations (Official Exact Coordinates)**:
   - **Station NGLB (Đại học Sư Phạm)**: $16.061634^\circ\text{N}, 108.160351^\circ\text{E}$ (459 Ton Duc Thang, Lien Chieu, Da Nang).
   - **Station TAKY (Tam Kỳ)**: $15.5621^\circ\text{N}, 108.4867^\circ\text{E}$ (Tam Ky, Da Nang).
-- **Temporal Span**: 1,354 consecutive days (2023–2026, from 2023-01-01 to 2026-09-15).
+- **Temporal Span**: 1,734 consecutive days (2022–2026, from 2022-01-01 to 2026-09-30).
 
 ---
 
@@ -90,7 +90,7 @@ python chay_web.py
 | **View Whole Province** | Header button `🌐 Toàn thành phố` | — |
 | **Search Location** | Top-left search input pill (4,750+ Da Nang locations & OSM street geocoding) | — |
 | **Switch Active Variable** | Layer Dock radio list (`PM2.5`, `Nhiệt độ`, `Độ ẩm`, `Gió`, `Mưa`, `BLH`) | — |
-| **Date Selection** | Bottom timeline date input (`min="2023-01-01" max="2026-09-15"`) | Out-of-range Warning Toast |
+| **Date Selection** | Bottom timeline date input (`min="2022-01-01" max="2026-09-30"`) | Out-of-range Warning Toast |
 | **Play / Pause** | Red circle Play button on bottom timeline | `Space` |
 | **Step 1 Day** | Timeline scrubbing slider / Arrow keys | `Right` / `Left` |
 | **Switch Basemap** | Layer Dock dropdown (`Đường phố` / `Vệ tinh`) | — |
@@ -172,7 +172,7 @@ The model's reliability assessment is grounded in the peer-reviewed methodology 
    - Cells falling outside the shapefile polygon are flagged via `M.in_shp` and excluded from statistical calculations and inspector hits.
 
 8. **Temporal Bounds & Validation Alert**:
-   - The date input enforces `min="2023-01-01"` and `max="2026-09-15"`. Any manual entry outside this range triggers an immediate floating toast alert and resets to the nearest valid day.
+   - The date input enforces `min="2022-01-01"` and `max="2026-09-30"`. Any manual entry outside this range triggers an immediate floating toast alert and resets to the nearest valid day.
 
 9. **Station Coordinates (100% ExactQC Fixed)**:
    - Station NGLB (Đại học Sư Phạm): $16.061634^\circ\text{N}, 108.160351^\circ\text{E}$ (459 Ton Duc Thang, Lien Chieu, Da Nang).
@@ -188,3 +188,11 @@ The model's reliability assessment is grounded in the peer-reviewed methodology 
    - Replaced the generic yellow selection circle with the high-resolution location pin icon (diem.png, derived from E:\Documents\New\điểm.png).
    - Refined to a compact, non-intrusive GIS footprint of **22 × 26 px** with an exact bottom-tip anchor point at [11, 26] and popup anchor at [0, -26].
    - Tuned with a refined ambient drop-shadow (drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65))), non-blocking pointer events (pointer-events: none), and instant rock-solid Leaflet coordinate locking without CSS transform lag.
+
+12. **Temporal Extension to 2022 (November 18, 2026)**:
+   - Data span extended back to **2022-01-01** and forward to **2026-09-30** (1,734 days, 5 yearly `pm25_YYYY` / `aoa_YYYY` binaries + `era5` + `chirps`; loader now reports 14 files).
+   - **2022 is outside the training period** (stations start 2023-12-01): the map is a temporal extrapolation. 2022 has the lowest AOA share (62.6% vs 66-71% in 2023-2026); display it together with the AOA mask.
+   - **No VIIRS AOD before 2023-05-15** on Google Earth Engine (`NOAA/VIIRS/AOD_EDR/V3`), so 2022 AOD fusion is Terra -> Aqua -> CAMS (CAMS fills ~79% of cell-days in 2022 vs 57-72% later).
+   - End date is limited by CHIRPS on GEE (last day 2026-09-30); ERA5 already reaches 2026-11-12.
+   - 2023-2025 binaries are byte-identical to the previous release; 2026 gained 2026-09-16 .. 2026-09-30.
+   - Jump chips use hard-coded day indices counted from `M.ngay_dau` (2022-01-01): peak 11/04/2026 = 1561, cleanest 03/04/2022 = 92 (domain-mean PM2.5). Recompute them whenever `ngay_dau` changes.
